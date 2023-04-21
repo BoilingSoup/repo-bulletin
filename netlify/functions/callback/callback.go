@@ -1,14 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/jackc/pgx/v5"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 )
@@ -93,18 +97,70 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 			Body: `{"status": "Failed to decode user data."}`,
 		}, nil
 	}
-	// fmt.Printf("%+v\n", data)
 
-	// config, err := pgx.ParseConfig(os.Getenv("DATABASE_URL"))
-	// if err != nil {
+	config, err := pgx.ParseConfig(os.Getenv("COCKROACHDB_URL"))
+	if err != nil {
+		return &events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			Body: `{"status": "Failed to create DB config."}`,
+		}, nil
+	}
 
-	// }
+	conn, err := pgx.ConnectConfig(context.Background(), config)
+	if err != nil {
+		return &events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			Body: `{"status": "Failed to connect to DB."}`,
+		}, nil
+	}
+	defer conn.Close(context.Background())
+
+	row := conn.QueryRow(context.Background(), `SELECT id FROM users WHERE id = $1;`, data.ID)
+	dst := UserData{}
+	err = row.Scan(&dst.ID)
+	if err != pgx.ErrNoRows && err != nil {
+		return &events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			Body: fmt.Sprintf(`{"status": "Error reading user from DB. %v"}`, err),
+		}, nil
+	}
+	if err == pgx.ErrNoRows {
+		if _, err = conn.Exec(context.Background(), `INSERT INTO users (id) VALUES ($1);`, data.ID); err != nil {
+			return &events.APIGatewayProxyResponse{
+				StatusCode: http.StatusInternalServerError,
+				Headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				Body: `{"status": "Error creating user in DB."}`,
+			}, nil
+		}
+	}
+
+	jwt, err := generateJWT(data.ID)
+	if err != nil {
+		return &events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			Body: fmt.Sprintf(`{"status": "Error creating JWT token. %v"}`, err),
+		}, nil
+	}
 
 	return &events.APIGatewayProxyResponse{
 		StatusCode: http.StatusTemporaryRedirect,
 		Headers: map[string]string{
-			"Location":     "http://localhost:3000/BoilingSoup",
-			"Content-Type": "application/json",
+			"Location":   "http://localhost:3000/BoilingSoup",
+			"set-cookie": fmt.Sprintf(`jwt=%s;Path=/;HttpOnly;Secure`, jwt),
 		},
 		Body: `{"status": "success"}`,
 	}, nil
@@ -138,6 +194,21 @@ func getStateFromCookie(request events.APIGatewayProxyRequest) (string, error) {
 	}
 
 	return "", errors.New("Failed to retrieve state from cookie.")
+}
+
+var secret = []byte(os.Getenv("JWT_SECRET"))
+
+func generateJWT(id int) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["id"] = id
+
+	tokenString, err := token.SignedString(secret)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
 
 func redirectWithError() (*events.APIGatewayProxyResponse, error) {
