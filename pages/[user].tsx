@@ -6,7 +6,7 @@ const User: NextPage = () => {
 
   return (
     <>
-      <a href="http://localhost:8888/.netlify/functions/login">
+      <a href="http://localhost:8888/.netlify/functions/redirect">
         login to github
       </a>
       <div>testtest</div>

@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"os"
 	"strings"
@@ -33,10 +33,8 @@ type UserData struct {
 }
 
 func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	storedState := strings.Split(request.Headers["cookie"], "state=")[1]
-	paramState := request.QueryStringParameters["state"]
-
-	if storedState != paramState {
+	validState := validateState(request)
+	if !validState {
 		return &events.APIGatewayProxyResponse{
 			StatusCode: http.StatusForbidden,
 			Headers: map[string]string{
@@ -57,8 +55,6 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 			Body: `{"status": "Could not get token."}`,
 		}, nil
 	}
-
-	// fmt.Printf("Access token: %s\nRefresh token: %s\nExpiry: %s\nType: %s\n", token.AccessToken, token.RefreshToken, token.Expiry, token.TokenType)
 
 	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/user", nil)
 	if err != nil {
@@ -86,9 +82,6 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	}
 	defer resp.Body.Close()
 
-	// b := new(bytes.Buffer)
-	// io.Copy(b, resp.Body)
-	// io.Copy(os.Stdout, resp.Body)
 	var data UserData
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
@@ -100,7 +93,12 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 			Body: `{"status": "Failed to decode user data."}`,
 		}, nil
 	}
-	fmt.Printf("%+v\n", data)
+	// fmt.Printf("%+v\n", data)
+
+	// config, err := pgx.ParseConfig(os.Getenv("DATABASE_URL"))
+	// if err != nil {
+
+	// }
 
 	return &events.APIGatewayProxyResponse{
 		StatusCode: http.StatusTemporaryRedirect,
@@ -109,5 +107,44 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 			"Content-Type": "application/json",
 		},
 		Body: `{"status": "success"}`,
+	}, nil
+}
+
+func validateState(request events.APIGatewayProxyRequest) bool {
+	storedState, err := getStateFromCookie(request)
+	if err != nil {
+		return false
+	}
+
+	paramState := request.QueryStringParameters["state"]
+	if storedState != paramState {
+		return false
+	}
+
+	return true
+}
+
+const stateCookieKey = "state="
+
+func getStateFromCookie(request events.APIGatewayProxyRequest) (string, error) {
+	cookies := strings.Split(request.Headers["cookie"], "; ")
+	for _, v := range cookies {
+		if !strings.Contains(v, stateCookieKey) {
+			continue
+		}
+
+		return strings.Replace(v, stateCookieKey, "", 1), nil
+
+	}
+
+	return "", errors.New("Failed to retrieve state from cookie.")
+}
+
+func redirectWithError() (*events.APIGatewayProxyResponse, error) {
+	return &events.APIGatewayProxyResponse{
+		StatusCode: http.StatusTemporaryRedirect,
+		Headers: map[string]string{
+			"Location": "http://localhost:3000/BoilingSoup",
+		},
 	}, nil
 }

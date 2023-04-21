@@ -40,8 +40,9 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	}, nil
 }
 
+const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-"
+
 func generateState(length int) string {
-	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-"
 	ll := len(chars)
 	b := make([]byte, length)
 	rand.Read(b) // generates len(b) random bytes
