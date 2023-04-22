@@ -18,7 +18,7 @@ import {
   IconBrandGithub,
   IconBrandGithubFilled,
   IconBrandTwitterFilled,
-  IconPencil,
+  IconWorld,
 } from "@tabler/icons-react";
 import { Carousel } from "@mantine/carousel";
 import { useRef } from "react";
@@ -74,10 +74,10 @@ const Home: NextPage = () => {
               component={Link}
               href={`/${account.name}`}
               variant="gradient"
-              leftIcon={<IconPencil />}
+              leftIcon={<IconWorld />}
               size="lg"
             >
-              Edit My Page
+              View My Page
             </Button>
           )}
           {!account && isLoading && (

@@ -23,7 +23,7 @@ const User: NextPage = () => {
   });
 
   const isMyPage = account?.name.toLowerCase() === user?.toLowerCase();
-  console.log(isMyPage);
+  const isValidEditMode = isMyPage && router.query.edit === "true";
 
   return (
     <>
@@ -58,7 +58,7 @@ const User: NextPage = () => {
                 radius={9999}
               />
 
-              <Text color="dark.1" size="4rem" align="center">
+              <Text color="dark.1" size="clamp(2rem, 6vw, 3rem)" align="center">
                 {`${user}'s bulletin is empty!`}
               </Text>
               {isMyPage ? (
@@ -67,8 +67,6 @@ const User: NextPage = () => {
                   w="300px"
                   my="60px"
                   mx="auto"
-                  // component={Link}
-                  // href={`/${account?.name}`}
                   variant="gradient"
                   leftIcon={<IconPencil />}
                   size="lg"

@@ -1,5 +1,6 @@
 import {
   Dispatch,
+  ReactNode,
   SetStateAction,
   createContext,
   useContext,
@@ -31,7 +32,7 @@ export const useAuth = () => {
 };
 
 type Props = {
-  children: JSX.Element;
+  children: ReactNode;
 };
 
 export const AuthProvider = ({ children }: Props) => {

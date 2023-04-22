@@ -3,6 +3,7 @@ import type { AppProps } from "next/app";
 import { AuthProvider } from "../contexts/AuthProvider";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
+import { Navbar } from "../components/Navbar";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -39,6 +40,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         }}
       >
         <AuthProvider>
+          <Navbar />
           <Component {...pageProps} />
         </AuthProvider>
       </MantineProvider>
