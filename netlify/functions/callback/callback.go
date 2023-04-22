@@ -144,7 +144,6 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 			}, nil
 		}
 	}
-
 	jwt, err := generateJWT(data.ID)
 	if err != nil {
 		return &events.APIGatewayProxyResponse{
@@ -201,7 +200,7 @@ var secret = []byte(os.Getenv("JWT_SECRET"))
 func generateJWT(id int) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
-	claims["id"] = id
+	claims["id"] = fmt.Sprint(id)
 
 	tokenString, err := token.SignedString(secret)
 	if err != nil {
