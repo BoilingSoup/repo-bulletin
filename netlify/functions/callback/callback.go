@@ -172,7 +172,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	return &events.APIGatewayProxyResponse{
 		StatusCode: http.StatusTemporaryRedirect,
 		Headers: map[string]string{
-			"Location":   "http://localhost:3000/BoilingSoup",
+			"Location":   "http://localhost:8888/BoilingSoup",
 			"set-cookie": fmt.Sprintf(`jwt=%s;Path=/;HttpOnly;Secure;SameSite=strict;max-age=86400`, jwt),
 		},
 		Body: `{"status": "success"}`,

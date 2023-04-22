@@ -1,3 +1,4 @@
+import { Box, Text } from "@mantine/core";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 
@@ -6,11 +7,15 @@ const User: NextPage = () => {
 
   return (
     <>
-      <a href="http://localhost:8888/.netlify/functions/redirect">
-        login to github
-      </a>
-      <div>testtest</div>
-      <div>{JSON.stringify(router.query)}</div>
+      <Box
+        sx={(theme) => ({
+          width: "100vw",
+          height: "100vh",
+          background: theme.colors.github[9],
+        })}
+      >
+        <Text color="dark.3">{JSON.stringify(router.query)}</Text>
+      </Box>
     </>
   );
 };

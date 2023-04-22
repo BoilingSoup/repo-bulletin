@@ -40,6 +40,12 @@ export const AuthProvider = ({ children }: Props) => {
     onSuccess: (user) => {
       setAccount(user);
     },
+    cacheTime: Infinity,
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+    retry: false,
   });
 
   return (
