@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,10 +14,28 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
 )
 
 type UserData struct {
-	ID int `json:"id"`
+	ID          int    `json:"id"`
+	AccessToken string `json:"access_token"`
+}
+
+var githubOauthConfig *oauth2.Config
+
+func init() {
+	githubOauthConfig = &oauth2.Config{
+		RedirectURL:  os.Getenv("GITHUB_CALLBACK"),
+		ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+		ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+		Endpoint:     github.Endpoint,
+	}
+}
+
+func main() {
+	lambda.Start(handler)
 }
 
 func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
@@ -54,9 +73,9 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	}
 	defer conn.Close(context.Background())
 
-	row := conn.QueryRow(context.Background(), `SELECT id FROM users WHERE id = $1;`, id)
+	row := conn.QueryRow(context.Background(), `SELECT id, access_token FROM users WHERE id = $1;`, id)
 	dst := UserData{}
-	err = row.Scan(&dst.ID)
+	err = row.Scan(&dst.ID, &dst.AccessToken)
 	if err != pgx.ErrNoRows && err != nil {
 		return &events.APIGatewayProxyResponse{
 			StatusCode: http.StatusInternalServerError,
@@ -76,20 +95,55 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 		}, nil
 	}
 
-	// client := http.Client{}
-	// client.Get()
+	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/user", nil)
+	if err != nil {
+		return &events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			Body: `{"status": "Failed to construct a request."}`,
+		}, nil
+	}
+	req.Header.Set("Authorization", "Bearer "+dst.AccessToken)
+	req.Header.Set("Accept", "application/vnd.github+json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return &events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			Body: `{"status": "Failed to request user data."}`,
+		}, nil
+	}
+	defer resp.Body.Close()
+
+	var (
+		data struct {
+			Login string `json:"login"`
+		}
+	)
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		return &events.APIGatewayProxyResponse{
+			StatusCode: http.StatusInternalServerError,
+			Headers: map[string]string{
+				"Content-Type": "application/json",
+			},
+			Body: `{"status": "Failed to decode user data."}`,
+		}, nil
+	}
 
 	return &events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 		},
-		Body: fmt.Sprintf(`{"id": "%+v"}`, dst),
+		Body: fmt.Sprintf(`{"id": "%d", "name": "%s"}`, dst.ID, data.Login),
 	}, nil
-}
-
-func main() {
-	lambda.Start(handler)
 }
 
 func getUser(request events.APIGatewayProxyRequest) (int, error) {
@@ -115,7 +169,7 @@ func getUser(request events.APIGatewayProxyRequest) (int, error) {
 
 	idString, ok := claims["id"].(string)
 	if !ok {
-		return 0, errors.New("Unexpected ID value.")
+		return 0, errors.New("Unexpected ID type.")
 	}
 
 	id, err := strconv.Atoi(idString)
