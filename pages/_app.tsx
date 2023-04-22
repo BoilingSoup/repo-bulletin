@@ -9,7 +9,26 @@ const queryClient = new QueryClient();
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <MantineProvider withGlobalStyles withNormalizeCSS>
+      <MantineProvider
+        withGlobalStyles
+        withNormalizeCSS
+        theme={{
+          colors: {
+            github: [
+              "#516a90",
+              "#496083",
+              "#425776",
+              "#3b4d68",
+              "#33435b",
+              "#2c3a4e",
+              "#253041",
+              "#1d2734",
+              "#161d27",
+              "#0d1117",
+            ],
+          },
+        }}
+      >
         <AuthProvider>
           <Component {...pageProps} />
         </AuthProvider>
