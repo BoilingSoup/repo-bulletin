@@ -35,7 +35,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 		StatusCode: http.StatusTemporaryRedirect,
 		Headers: map[string]string{
 			"Location":   url,
-			"set-cookie": fmt.Sprintf(`state=%s;Path=/;HttpOnly;Secure`, state),
+			"set-cookie": fmt.Sprintf(`state=%s;Path=/;HttpOnly;Secure;SameSite=strict;max-age=6000`, state),
 		},
 	}, nil
 }

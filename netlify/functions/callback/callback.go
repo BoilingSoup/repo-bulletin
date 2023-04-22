@@ -33,7 +33,8 @@ func main() {
 }
 
 type UserData struct {
-	ID int `json:"id"`
+	ID          int    `json:"id"`
+	accessToken string // no export; assign manually
 }
 
 func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
@@ -86,6 +87,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	}
 	defer resp.Body.Close()
 
+	// io.Copy(os.Stdout, resp.Body)
 	var data UserData
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
@@ -134,7 +136,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 		}, nil
 	}
 	if err == pgx.ErrNoRows {
-		if _, err = conn.Exec(context.Background(), `INSERT INTO users (id) VALUES ($1);`, data.ID); err != nil {
+		if _, err := conn.Exec(context.Background(), `INSERT INTO users (id, access_token) VALUES ($1, $2);`, data.ID, token.AccessToken); err != nil {
 			return &events.APIGatewayProxyResponse{
 				StatusCode: http.StatusInternalServerError,
 				Headers: map[string]string{
@@ -144,6 +146,18 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 			}, nil
 		}
 	}
+	if err == nil {
+		if _, err = conn.Exec(context.Background(), `UPDATE users SET access_token = $1 WHERE id = $2;`, token.AccessToken, data.ID); err != nil {
+			return &events.APIGatewayProxyResponse{
+				StatusCode: http.StatusInternalServerError,
+				Headers: map[string]string{
+					"Content-Type": "application/json",
+				},
+				Body: fmt.Sprintf(`{"status": "Error updating user in DB. %v"}`, err),
+			}, nil
+		}
+	}
+
 	jwt, err := generateJWT(data.ID)
 	if err != nil {
 		return &events.APIGatewayProxyResponse{
@@ -159,7 +173,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 		StatusCode: http.StatusTemporaryRedirect,
 		Headers: map[string]string{
 			"Location":   "http://localhost:3000/BoilingSoup",
-			"set-cookie": fmt.Sprintf(`jwt=%s;Path=/;HttpOnly;Secure`, jwt),
+			"set-cookie": fmt.Sprintf(`jwt=%s;Path=/;HttpOnly;Secure;SameSite=strict;max-age=86400`, jwt),
 		},
 		Body: `{"status": "success"}`,
 	}, nil
