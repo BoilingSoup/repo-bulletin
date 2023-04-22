@@ -46,7 +46,7 @@ const User: NextPage = () => {
   const isMyPage = account?.name.toLowerCase() === user?.toLowerCase();
   const isValidEditMode = isMyPage && router.query.edit === "true";
 
-  console.log(bulletin);
+  // console.log(bulletin);
   return (
     <>
       <Box
@@ -93,11 +93,14 @@ const User: NextPage = () => {
         )}
         {isValidEditMode && (
           <Container>
-            <Flex>
-              <Group>
-                <Button>Save</Button>
-                <Button>Add a pinned repo</Button>
-                <Button>Save</Button>
+            <Flex justify={"flex-end"}>
+              <Group my="md">
+                <Button w="90px" variant="gradient">
+                  Save
+                </Button>
+                <Button w="90px" color="dark.3">
+                  Cancel
+                </Button>
               </Group>
             </Flex>
             {bulletin?.sections.map((section) => (
