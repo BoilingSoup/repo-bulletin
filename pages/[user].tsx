@@ -6,9 +6,11 @@ import {
   Flex,
   Group,
   Image,
+  Modal,
   Paper,
   Stack,
   Text,
+  useMantineTheme,
 } from "@mantine/core";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
@@ -21,6 +23,7 @@ import Link from "next/link";
 import { NAVBAR_HEIGHT } from "../components/styles";
 import { NotFound } from "../components/NotFound";
 import { newBulletin } from "../components/helpers";
+import { useDisclosure } from "@mantine/hooks";
 
 const User: NextPage = () => {
   const { account, isFetched } = useAuth();
@@ -39,17 +42,38 @@ const User: NextPage = () => {
     setBulletin,
     enabled: isFetched,
   });
+  // get avatar if user is in DB i.e. has a repobulletin account
   const { data: githubData, isFetched: githubIsFetched } = useGithub({
     user: user as string | undefined,
     enabled: notFound,
   });
+  // if user in DB && isMyPage, fetch my
 
   const isMyPage = account?.name.toLowerCase() === user?.toLowerCase();
   const isValidEditMode = isMyPage && router.query.edit === "true";
 
-  // console.log(bulletin);
+  const [opened, { open, close }] = useDisclosure(false);
+  const theme = useMantineTheme();
+
   return (
     <>
+      <Modal
+        opened={opened}
+        onClose={close}
+        title="Your public contributions"
+        centered
+        styles={{
+          close: {
+            background: theme.colors.github[7],
+            color: "white",
+            ":hover": { background: theme.colors.github[6] },
+          },
+          header: { background: theme.colors.github[7], color: "white" },
+          content: { background: theme.colors.github[7], height: "500px" },
+        }}
+      >
+        {/* Modal content */}
+      </Modal>
       <Box
         sx={(theme) => ({
           width: "100vw",
@@ -92,14 +116,21 @@ const User: NextPage = () => {
             </Stack>
           </Center>
         )}
-        {isValidEditMode && (
+        {isValidEditMode && githubIsFetched && (
           <Container>
             <Flex justify={"flex-end"}>
               <Group my="md">
                 <Button w="90px" variant="gradient">
                   Save
                 </Button>
-                <Button w="90px" color="dark.3">
+                <Button
+                  w="90px"
+                  color="dark.3"
+                  onClick={() => {
+                    setBulletin(bulletinData!);
+                    router.push(`/${user}`);
+                  }}
+                >
                   Cancel
                 </Button>
               </Group>
@@ -141,6 +172,7 @@ const User: NextPage = () => {
                           background: "none",
                         },
                       }}
+                      onClick={open}
                     >
                       Add Repos
                     </Button>
