@@ -11,6 +11,7 @@ import {
   Flex,
   ActionIcon,
   Tooltip,
+  Loader,
 } from "@mantine/core";
 import { useAuth } from "../contexts/AuthProvider";
 import Link from "next/link";
@@ -21,12 +22,15 @@ import {
   IconWorld,
 } from "@tabler/icons-react";
 import { Carousel } from "@mantine/carousel";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 
 const Home: NextPage = () => {
   const { account, isLoading } = useAuth();
   const autoplay = useRef(Autoplay({ delay: 2000 }));
+
+  const [redirecting, setRedirecting] = useState(false);
+  console.log(redirecting);
 
   return (
     <>
@@ -76,6 +80,7 @@ const Home: NextPage = () => {
               variant="gradient"
               leftIcon={<IconWorld />}
               size="lg"
+              onClick={() => setRedirecting(true)}
             >
               View My Page
             </Button>
@@ -96,7 +101,7 @@ const Home: NextPage = () => {
               })}
             />
           )}
-          {!account && !isLoading && (
+          {!account && !isLoading && !redirecting && (
             <Button
               h="60px"
               w="300px"
@@ -104,12 +109,18 @@ const Home: NextPage = () => {
               mx="auto"
               size="lg"
               leftIcon={<IconBrandGithub />}
-              color="dark.3"
+              variant="gradient"
               component="a"
               href="/.netlify/functions/redirect"
+              onClick={() => setRedirecting(true)}
             >
               Login with GitHub
             </Button>
+          )}
+          {!account && !isLoading && redirecting && (
+            <Center h="60px" w="300px" my="60px" mx="auto">
+              <Loader />
+            </Center>
           )}
         </Stack>
         <Center pos="absolute" bottom={20}>
