@@ -61,7 +61,7 @@ const Home: NextPage = () => {
             </Carousel.Slide>
             <Carousel.Slide>
               <Text color="dark.1" size="4rem" align="center">
-                Get your own page in seconds.
+                Build your own page in seconds.
               </Text>
             </Carousel.Slide>
           </Carousel>

@@ -40,16 +40,21 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 		return jsonErrorResponse(http.StatusBadRequest, "No user provided.")
 	}
 
-	client := http.Client{}
-	resp, err := client.Get("https://api.github.com/users/" + user)
+	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/users/"+user, nil)
 	if err != nil {
-		return jsonErrorResponse(http.StatusInternalServerError, "Failed to fetch user.")
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to construct a request.")
+	}
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("GITHUB_PAT"))
+	req.Header.Set("Accept", "application/vnd.github+json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to request user data.")
 	}
 	defer resp.Body.Close()
 
-	var data struct {
-		ID int `json:"id"`
-	}
+	var data UserData
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
 		return jsonErrorResponse(http.StatusInternalServerError, "Failed to decode user data.")
@@ -73,7 +78,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 		return jsonErrorResponse(http.StatusInternalServerError, "Error reading user from DB.")
 	}
 	if err == pgx.ErrNoRows {
-		return jsonErrorResponse(http.StatusNotFound, "User does not have a bulletin.")
+		return jsonErrorResponse(http.StatusNotFound, "User does not have an account.")
 	}
 
 	row = conn.QueryRow(context.Background(), `SELECT data FROM bulletins WHERE user_id = $1;`, data.ID)
@@ -89,7 +94,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 			Headers: map[string]string{
 				"Content-Type": "application/json",
 			},
-			Body: `{"data": null}`,
+			Body: `null`,
 		}, nil
 	}
 

@@ -1,17 +1,29 @@
-import { Box, Center, Stack, Text } from "@mantine/core";
+import { Box, Button, Center, Image, Stack, Text } from "@mantine/core";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useBulletin } from "../hooks/useBulletin";
 import { useState } from "react";
-import { IconMoodSmileDizzy } from "@tabler/icons-react";
-// import { useEffect } from "react";
+import { IconMoodSmileDizzy, IconPencil } from "@tabler/icons-react";
+import { useGithub } from "../hooks/useGithub";
+import { useAuth } from "../contexts/AuthProvider";
 
 const User: NextPage = () => {
+  const { account } = useAuth();
   const router = useRouter();
-  const { user } = router.query;
-  const [notFound, setNotFound] = useState<boolean>(false);
+  const user = router.query.user as string | undefined;
+  const [notFound, setNotFound] = useState<boolean | undefined>(undefined);
 
-  useBulletin({ user: user as string, setNotFound });
+  const { data, isLoading } = useBulletin({
+    user: user as string | undefined,
+    setNotFound,
+  });
+  const { data: githubData, isFetched } = useGithub({
+    user: user as string | undefined,
+    enabled: notFound,
+  });
+
+  const isMyPage = account?.name.toLowerCase() === user?.toLowerCase();
+  console.log(isMyPage);
 
   return (
     <>
@@ -22,7 +34,6 @@ const User: NextPage = () => {
           background: theme.colors.github[9],
         })}
       >
-        {/* <Text color="dark.3">{JSON.stringify(router.query.user)}</Text> */}
         {notFound && (
           <Center w="100%" h="100%">
             <Stack>
@@ -33,6 +44,40 @@ const User: NextPage = () => {
               <Text color="dark.1" size="4rem" align="center">
                 This user doesn't exist.
               </Text>
+            </Stack>
+          </Center>
+        )}
+        {data === null && isFetched && (
+          <Center w="100%" h="100%">
+            <Stack>
+              <Image
+                src={githubData?.avatar_url}
+                height={200}
+                width={200}
+                mx="auto"
+                radius={9999}
+              />
+
+              <Text color="dark.1" size="4rem" align="center">
+                {`${user}'s bulletin is empty!`}
+              </Text>
+              {isMyPage ? (
+                <Button
+                  h="60px"
+                  w="300px"
+                  my="60px"
+                  mx="auto"
+                  // component={Link}
+                  // href={`/${account?.name}`}
+                  variant="gradient"
+                  leftIcon={<IconPencil />}
+                  size="lg"
+                >
+                  Edit My Page
+                </Button>
+              ) : (
+                <Button>Back to My Page</Button>
+              )}
             </Stack>
           </Center>
         )}
