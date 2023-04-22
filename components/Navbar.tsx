@@ -37,7 +37,7 @@ export const Navbar = () => {
             Settings
           </Text>
         )}
-        {isLoading && <Loader mr="xl" size="sm" />}
+        {isLoading && <Loader mr="40px" size="sm" />}
         {!isLoading && account && (
           <Text
             mr="xl"
@@ -51,7 +51,13 @@ export const Navbar = () => {
           </Text>
         )}
         {!isLoading && !account && router.pathname !== "/" && (
-          <Text mr="xl" size="1rem" color="white">
+          <Text
+            mr="xl"
+            size="1rem"
+            color="white"
+            component="a"
+            href="/.netlify/functions/redirect"
+          >
             Login with GitHub
           </Text>
         )}

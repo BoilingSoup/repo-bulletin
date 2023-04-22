@@ -6,6 +6,7 @@ import { useState } from "react";
 import { IconMoodSmileDizzy, IconPencil } from "@tabler/icons-react";
 import { useGithub } from "../hooks/useGithub";
 import { useAuth } from "../contexts/AuthProvider";
+import Link from "next/link";
 
 const User: NextPage = () => {
   const { account } = useAuth();
@@ -24,6 +25,7 @@ const User: NextPage = () => {
 
   const isMyPage = account?.name.toLowerCase() === user?.toLowerCase();
   const isValidEditMode = isMyPage && router.query.edit === "true";
+  console.log(isValidEditMode);
 
   return (
     <>
@@ -47,7 +49,7 @@ const User: NextPage = () => {
             </Stack>
           </Center>
         )}
-        {data === null && isFetched && (
+        {data === null && isFetched && !isValidEditMode && (
           <Center w="100%" h="100%">
             <Stack>
               <Image
@@ -61,7 +63,7 @@ const User: NextPage = () => {
               <Text color="dark.1" size="clamp(2rem, 6vw, 3rem)" align="center">
                 {`${user}'s bulletin is empty!`}
               </Text>
-              {isMyPage ? (
+              {isMyPage && (
                 <Button
                   h="60px"
                   w="300px"
@@ -70,11 +72,11 @@ const User: NextPage = () => {
                   variant="gradient"
                   leftIcon={<IconPencil />}
                   size="lg"
+                  component={Link}
+                  href={`/${user}?edit=true`}
                 >
                   Edit My Page
                 </Button>
-              ) : (
-                <Button>Back to My Page</Button>
               )}
             </Stack>
           </Center>
