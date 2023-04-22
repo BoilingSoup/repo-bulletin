@@ -42,10 +42,6 @@ export const AuthProvider = ({ children }: Props) => {
     },
     cacheTime: Infinity,
     staleTime: Infinity,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    refetchOnWindowFocus: false,
-    retry: false,
   });
 
   return (

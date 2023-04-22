@@ -16,6 +16,10 @@ func main() {
 	lambda.Start(handler)
 }
 
+type UserData struct {
+	ID int `json:"id"`
+}
+
 type BulletinData struct {
 	Data map[string]any
 }
@@ -62,9 +66,19 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	}
 	defer conn.Close(context.Background())
 
-	row := conn.QueryRow(context.Background(), `SELECT data FROM bulletins WHERE user_id = $1;`, data.ID)
-	dst := BulletinData{}
-	err = row.Scan(&dst.Data)
+	row := conn.QueryRow(context.Background(), `SELECT id FROM users WHERE id = $1;`, data.ID)
+	ud := UserData{}
+	err = row.Scan(&ud.ID)
+	if err != pgx.ErrNoRows && err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Error reading user from DB.")
+	}
+	if err == pgx.ErrNoRows {
+		return jsonErrorResponse(http.StatusNotFound, "User does not have a bulletin.")
+	}
+
+	row = conn.QueryRow(context.Background(), `SELECT data FROM bulletins WHERE user_id = $1;`, data.ID)
+	bd := BulletinData{}
+	err = row.Scan(&bd.Data)
 	if err != pgx.ErrNoRows && err != nil {
 		return jsonErrorResponse(http.StatusInternalServerError, "Error reading user bulletins from DB.")
 	}
@@ -84,6 +98,6 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 		},
-		Body: fmt.Sprintf(`{"data": "%v"}`, dst.Data),
+		Body: fmt.Sprintf(`{"data": "%v"}`, bd.Data),
 	}, nil
 }
