@@ -38,38 +38,30 @@ func main() {
 	lambda.Start(handler)
 }
 
+func jsonErrorResponse(code int, message string) (*events.APIGatewayProxyResponse, error) {
+	return &events.APIGatewayProxyResponse{
+		StatusCode: code,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
+		Body: fmt.Sprintf(`{"status": "%s"}`, message),
+	}, nil
+}
+
 func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	id, err := getUser(request)
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: 200,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: fmt.Sprintf(`{"status": "Authentication failed: %v"}`, err),
-		}, nil
+		return jsonErrorResponse(http.StatusUnauthorized, "Unauthenticated")
 	}
 
 	config, err := pgx.ParseConfig(os.Getenv("COCKROACHDB_URL"))
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Failed to create DB config."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to create DB config.")
 	}
 
 	conn, err := pgx.ConnectConfig(context.Background(), config)
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Failed to connect to DB."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to connect to DB.")
 	}
 	defer conn.Close(context.Background())
 
@@ -77,33 +69,15 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	dst := UserData{}
 	err = row.Scan(&dst.ID, &dst.AccessToken)
 	if err != pgx.ErrNoRows && err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: fmt.Sprintf(`{"status": "Error reading user from DB. %v"}`, err),
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Error reading user from DB.")
 	}
 	if err == pgx.ErrNoRows {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "User does not exist in DB."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "User does not exist in DB.")
 	}
 
 	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/user", nil)
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Failed to construct a request."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to construct a request.")
 	}
 	req.Header.Set("Authorization", "Bearer "+dst.AccessToken)
 	req.Header.Set("Accept", "application/vnd.github+json")
@@ -111,13 +85,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Failed to request user data."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to request user data.")
 	}
 	defer resp.Body.Close()
 
@@ -128,13 +96,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	)
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Failed to decode user data."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to decode user data.")
 	}
 
 	return &events.APIGatewayProxyResponse{

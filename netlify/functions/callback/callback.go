@@ -37,39 +37,31 @@ type UserData struct {
 	accessToken string // no export; assign manually
 }
 
+func jsonErrorResponse(code int, message string) (*events.APIGatewayProxyResponse, error) {
+	return &events.APIGatewayProxyResponse{
+		StatusCode: code,
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
+		Body: fmt.Sprintf(`{"status": "%s"}`, message),
+	}, nil
+}
+
 func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	validState := validateState(request)
 	if !validState {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusForbidden,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Invalid state."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusUnauthorized, "Invalid state.")
 	}
 
 	code := request.QueryStringParameters["code"]
 	token, err := githubOauthConfig.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusBadRequest,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Could not get token."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusBadRequest, "Could not get token.")
 	}
 
 	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/user", nil)
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Failed to construct a request."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to construct a request.")
 	}
 	req.Header.Set("Authorization", "Bearer "+token.AccessToken)
 	req.Header.Set("Accept", "application/vnd.github+json")
@@ -77,13 +69,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Failed to request user data."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to request user data.")
 	}
 	defer resp.Body.Close()
 
@@ -91,82 +77,48 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	var data UserData
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Failed to decode user data."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to decode user data.")
 	}
 
 	config, err := pgx.ParseConfig(os.Getenv("COCKROACHDB_URL"))
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Failed to create DB config."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to create DB config.")
 	}
 
 	conn, err := pgx.ConnectConfig(context.Background(), config)
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: `{"status": "Failed to connect to DB."}`,
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to connect to DB.")
 	}
 	defer conn.Close(context.Background())
 
 	row := conn.QueryRow(context.Background(), `SELECT id FROM users WHERE id = $1;`, data.ID)
 	dst := UserData{}
 	err = row.Scan(&dst.ID)
-	if err != pgx.ErrNoRows && err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: fmt.Sprintf(`{"status": "Error reading user from DB. %v"}`, err),
-		}, nil
-	}
-	if err == pgx.ErrNoRows {
-		if _, err := conn.Exec(context.Background(), `INSERT INTO users (id, access_token) VALUES ($1, $2);`, data.ID, token.AccessToken); err != nil {
-			return &events.APIGatewayProxyResponse{
-				StatusCode: http.StatusInternalServerError,
-				Headers: map[string]string{
-					"Content-Type": "application/json",
-				},
-				Body: `{"status": "Error creating user in DB."}`,
-			}, nil
+	switch {
+	case err != pgx.ErrNoRows && err != nil:
+		return jsonErrorResponse(http.StatusInternalServerError, "Error reading user from DB.")
+
+	case err == pgx.ErrNoRows:
+		_, err = conn.Exec(context.Background(), `INSERT INTO users (id, access_token) VALUES ($1, $2);`, data.ID, token.AccessToken)
+		if err != nil {
+			return jsonErrorResponse(http.StatusInternalServerError, "Error creating user in DB.")
+		}
+
+	case err == nil:
+		_, err = conn.Exec(context.Background(), `UPDATE users SET access_token = $1 WHERE id = $2;`, token.AccessToken, data.ID)
+		if err != nil {
+			return jsonErrorResponse(http.StatusInternalServerError, "Error updating user in DB.")
 		}
 	}
-	if err == nil {
-		if _, err = conn.Exec(context.Background(), `UPDATE users SET access_token = $1 WHERE id = $2;`, token.AccessToken, data.ID); err != nil {
-			return &events.APIGatewayProxyResponse{
-				StatusCode: http.StatusInternalServerError,
-				Headers: map[string]string{
-					"Content-Type": "application/json",
-				},
-				Body: fmt.Sprintf(`{"status": "Error updating user in DB. %v"}`, err),
-			}, nil
-		}
-	}
+	//   {
+	// "sections": [
+	// {"id": 1, "thing":true}
+	// ]
+	// }
 
 	jwt, err := generateJWT(data.ID)
 	if err != nil {
-		return &events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
-			Body: fmt.Sprintf(`{"status": "Error creating JWT token. %v"}`, err),
-		}, nil
+		return jsonErrorResponse(http.StatusInternalServerError, "Error creating JWT token.")
 	}
 
 	return &events.APIGatewayProxyResponse{
@@ -224,11 +176,11 @@ func generateJWT(id int) (string, error) {
 	return tokenString, nil
 }
 
-func redirectWithError() (*events.APIGatewayProxyResponse, error) {
-	return &events.APIGatewayProxyResponse{
-		StatusCode: http.StatusTemporaryRedirect,
-		Headers: map[string]string{
-			"Location": "http://localhost:3000/BoilingSoup",
-		},
-	}, nil
-}
+// func redirectWithError() (*events.APIGatewayProxyResponse, error) {
+// 	return &events.APIGatewayProxyResponse{
+// 		StatusCode: http.StatusTemporaryRedirect,
+// 		Headers: map[string]string{
+// 			"Location": "http://localhost:3000/BoilingSoup",
+// 		},
+// 	}, nil
+// }
