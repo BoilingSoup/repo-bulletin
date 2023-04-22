@@ -23,7 +23,7 @@ import { NotFound } from "../components/NotFound";
 import { newBulletin } from "../components/helpers";
 
 const User: NextPage = () => {
-  const { account } = useAuth();
+  const { account, isFetched } = useAuth();
 
   const router = useRouter();
   const user = router.query.user as string | undefined;
@@ -37,8 +37,9 @@ const User: NextPage = () => {
     user: user as string | undefined,
     setNotFound,
     setBulletin,
+    enabled: isFetched,
   });
-  const { data: githubData, isFetched } = useGithub({
+  const { data: githubData, isFetched: githubIsFetched } = useGithub({
     user: user as string | undefined,
     enabled: notFound,
   });
@@ -58,7 +59,7 @@ const User: NextPage = () => {
         pt={NAVBAR_HEIGHT}
       >
         {notFound && <NotFound />}
-        {bulletinData === null && isFetched && !isValidEditMode && (
+        {bulletinData === null && githubIsFetched && !isValidEditMode && (
           <Center w="100%" h="100%">
             <Stack>
               <Image
@@ -104,50 +105,49 @@ const User: NextPage = () => {
               </Group>
             </Flex>
             {bulletin?.sections.map((section) => (
-              <>
-                <Paper
+              <Paper
+                key={section.id}
+                sx={(theme) => ({
+                  background: theme.colors.github[7],
+                  padding: theme.spacing.lg,
+                  borderRadius: theme.radius.lg,
+                })}
+              >
+                <Text
+                  color="dark.0"
+                  size="2rem"
+                  component="h1"
                   sx={(theme) => ({
-                    background: theme.colors.github[7],
-                    padding: theme.spacing.lg,
+                    border: `1px dashed ${theme.colors.dark[2]}`,
                     borderRadius: theme.radius.lg,
                   })}
                 >
-                  <Text
-                    color="dark.0"
-                    size="2rem"
-                    component="h1"
+                  {section.name}
+                </Text>
+                {section.repos.length === 0 && (
+                  <Center
+                    h="200px"
+                    w="100%"
                     sx={(theme) => ({
                       border: `1px dashed ${theme.colors.dark[2]}`,
                       borderRadius: theme.radius.lg,
                     })}
                   >
-                    {section.name}
-                  </Text>
-                  {section.repos.length === 0 && (
-                    <Center
-                      h="200px"
-                      w="100%"
-                      sx={(theme) => ({
-                        border: `1px dashed ${theme.colors.dark[2]}`,
-                        borderRadius: theme.radius.lg,
-                      })}
+                    <Button
+                      bg="none"
+                      leftIcon={<IconPlus />}
+                      sx={{
+                        ":hover": {
+                          background: "none",
+                        },
+                      }}
                     >
-                      <Button
-                        bg="none"
-                        leftIcon={<IconPlus />}
-                        sx={{
-                          ":hover": {
-                            background: "none",
-                          },
-                        }}
-                      >
-                        Add Repos
-                      </Button>
-                    </Center>
-                  )}
-                  <Paper>{section.repos}</Paper>
-                </Paper>
-              </>
+                      Add Repos
+                    </Button>
+                  </Center>
+                )}
+                <Paper>{section.repos}</Paper>
+              </Paper>
             ))}
             {/* <Button leftIcon={<IconPlus />}>New Section</Button> */}
             {/* <Text color="white">{JSON.stringify(bulletin)}</Text> */}

@@ -9,9 +9,15 @@ type Param = {
   user: string | undefined;
   setNotFound: Dispatch<SetStateAction<boolean | undefined>>;
   setBulletin: Dispatch<SetStateAction<Exclude<Bulletin, null> | undefined>>;
+  enabled: boolean;
 };
 
-export const useBulletin = ({ user, setNotFound, setBulletin }: Param) => {
+export const useBulletin = ({
+  user,
+  setNotFound,
+  setBulletin,
+  enabled: accountIsFetched,
+}: Param) => {
   const { account } = useAuth();
 
   return useQuery(["bulletin", user], fetchBulletin(user), {
@@ -43,7 +49,7 @@ export const useBulletin = ({ user, setNotFound, setBulletin }: Param) => {
         return;
       }
     },
-    enabled: user !== undefined,
+    enabled: user !== undefined && accountIsFetched,
   });
 };
 

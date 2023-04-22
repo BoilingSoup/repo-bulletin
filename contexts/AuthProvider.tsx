@@ -18,6 +18,7 @@ type UserContext = {
   account: Account;
   setAccount: Dispatch<SetStateAction<Account>>;
   isLoading: boolean;
+  isFetched: boolean;
 };
 
 const AuthContext = createContext<UserContext | undefined>(undefined);
@@ -37,7 +38,7 @@ type Props = {
 
 export const AuthProvider = ({ children }: Props) => {
   const [account, setAccount] = useState<Account>(null);
-  const { isLoading } = useQuery(["account"], fetchAccount, {
+  const { isLoading, isFetched } = useQuery(["account"], fetchAccount, {
     onSuccess: (user) => {
       setAccount(user);
     },
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }: Props) => {
   });
 
   return (
-    <AuthContext.Provider value={{ account, setAccount, isLoading }}>
+    <AuthContext.Provider value={{ account, setAccount, isLoading, isFetched }}>
       {children}
     </AuthContext.Provider>
   );
