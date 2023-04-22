@@ -10,7 +10,7 @@ type Param = {
 export const useGithub = ({ user, enabled }: Param) => {
   return useQuery(["github", user], fetchGithub({ user, enabled }), {
     onSuccess: (data) => {
-      console.log(data);
+      // console.log(data);
       // setNotFound(false);
     },
     onError: (err: AxiosError) => {

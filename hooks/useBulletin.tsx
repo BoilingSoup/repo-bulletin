@@ -2,16 +2,39 @@ import { useQuery } from "react-query";
 import { apiClient } from "../client/apiClient";
 import { AxiosError } from "axios";
 import { Dispatch, SetStateAction } from "react";
+import { useAuth } from "../contexts/AuthProvider";
+import { newBulletin } from "../components/helpers";
 
 type Param = {
   user: string | undefined;
   setNotFound: Dispatch<SetStateAction<boolean | undefined>>;
+  setBulletin: Dispatch<SetStateAction<Exclude<Bulletin, null> | undefined>>;
 };
 
-export const useBulletin = ({ user, setNotFound }: Param) => {
+export const useBulletin = ({ user, setNotFound, setBulletin }: Param) => {
+  const { account } = useAuth();
+
   return useQuery(["bulletin", user], fetchBulletin(user), {
     onSuccess: (data) => {
-      console.log(data);
+      if (data === undefined) {
+        // NOTE: should never be undefined
+        return;
+      }
+
+      const isMyAccount = user?.toLowerCase() === account?.name.toLowerCase();
+
+      if (!isMyAccount) {
+        setNotFound(false);
+        return;
+      }
+
+      if (data === null) {
+        setBulletin(newBulletin());
+        setNotFound(false);
+        return;
+      }
+
+      setBulletin(data);
       setNotFound(false);
     },
     onError: (err: AxiosError) => {
@@ -24,7 +47,7 @@ export const useBulletin = ({ user, setNotFound }: Param) => {
   });
 };
 
-type Bulletin = {
+export type Bulletin = {
   sections: { id: string; name: string; repos: number[] }[];
 } | null;
 

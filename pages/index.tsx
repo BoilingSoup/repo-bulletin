@@ -30,7 +30,6 @@ const Home: NextPage = () => {
   const autoplay = useRef(Autoplay({ delay: 2000 }));
 
   const [redirecting, setRedirecting] = useState(false);
-  console.log(redirecting);
 
   return (
     <>
