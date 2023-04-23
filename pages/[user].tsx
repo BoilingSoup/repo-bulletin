@@ -31,26 +31,30 @@ const User: NextPage = () => {
 
   const router = useRouter();
   const user = router.query.user as string | undefined;
+  console.log(user)
   const [notFound, setNotFound] = useState<boolean | undefined>(undefined);
 
   const [bulletin, setBulletin] = useState<Exclude<Bulletin, null> | undefined>(
     undefined
   );
 
-  const { data: bulletinData, isFetched: bulletinIsFetched } = useBulletin({
-    user: user as string | undefined,
-    setNotFound,
-    setBulletin,
-    enabled: accountIsFetched,
-  });
-  // get avatar if user is in DB i.e. has a repobulletin account
+  // get avatar & id from github
   const { data: githubData, isFetched: githubIsFetched } = useGithub({
     user: user as string | undefined,
-    enabled: bulletinIsFetched,
+    setNotFound,
+    enabled: user !== undefined,
+  });
+
+  // use id to check if there is bulletin in DB
+  const { data: bulletinData, isFetched: bulletinIsFetched } = useBulletin({
+    id: githubData?.id,
+    setNotFound,
+    setBulletin,
+    enabled: githubIsFetched,
   });
 
   const isMyPage = account?.name.toLowerCase() === user?.toLowerCase();
-  // if user in DB && isMyPage, fetch my public contributions
+  // if user in DB && isMyPage, fetch my public contributions ** if account?.name exists the user is in DB. **
   const { data: contributions } = usePublicContributions({
     user: user as string | undefined,
     enabled: isMyPage,

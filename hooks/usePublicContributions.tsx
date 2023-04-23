@@ -7,16 +7,20 @@ type Param = {
 };
 
 export const usePublicContributions = ({ user, enabled: isMyPage }: Param) => {
-  return useQuery(["contributions", user], fetchPublicContributions(user), {
-    onSuccess: (data) => {
-      console.log(data);
-      //
-    },
-    onError: () => {
-      //
-    },
-    enabled: isMyPage,
-  });
+  return useQuery(
+    ["contributions", user?.toLowerCase()],
+    fetchPublicContributions(user),
+    {
+      onSuccess: (data) => {
+        console.log(data);
+        //
+      },
+      onError: () => {
+        //
+      },
+      enabled: isMyPage,
+    }
+  );
 };
 
 type PublicContributions = {
@@ -39,6 +43,8 @@ const fetchPublicContributions = (user: string | undefined) => async () => {
     return;
   }
 
-  const ret = await githubClient.get<PublicContributions[]>(`${user}/repos`);
+  const ret = await githubClient.get<PublicContributions[]>(
+    `/users/${user}/repos`
+  );
   return ret.data;
 };

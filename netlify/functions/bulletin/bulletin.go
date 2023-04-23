@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -35,30 +34,30 @@ func jsonErrorResponse(code int, message string) (*events.APIGatewayProxyRespons
 }
 
 func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	user, ok := request.QueryStringParameters["user"]
+	id, ok := request.QueryStringParameters["id"]
 	if !ok {
-		return jsonErrorResponse(http.StatusBadRequest, "No user provided.")
+		return jsonErrorResponse(http.StatusBadRequest, "No id provided.")
 	}
 
-	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/users/"+user, nil)
-	if err != nil {
-		return jsonErrorResponse(http.StatusInternalServerError, "Failed to construct a request.")
-	}
-	req.Header.Set("Authorization", "Bearer "+os.Getenv("GITHUB_PAT"))
-	req.Header.Set("Accept", "application/vnd.github+json")
+	// req, err := http.NewRequest(http.MethodGet, "https://api.github.com/users/"+user, nil)
+	// if err != nil {
+	// 	return jsonErrorResponse(http.StatusInternalServerError, "Failed to construct a request.")
+	// }
+	// req.Header.Set("Authorization", "Bearer "+os.Getenv("GITHUB_PAT"))
+	// req.Header.Set("Accept", "application/vnd.github+json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return jsonErrorResponse(http.StatusInternalServerError, "Failed to request user data.")
-	}
-	defer resp.Body.Close()
+	// client := &http.Client{}
+	// resp, err := client.Do(req)
+	// if err != nil {
+	// 	return jsonErrorResponse(http.StatusInternalServerError, "Failed to request user data.")
+	// }
+	// defer resp.Body.Close()
 
-	var data UserData
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	if err != nil {
-		return jsonErrorResponse(http.StatusInternalServerError, "Failed to decode user data.")
-	}
+	// var data UserData
+	// err = json.NewDecoder(resp.Body).Decode(&data)
+	// if err != nil {
+	// 	return jsonErrorResponse(http.StatusInternalServerError, "Failed to decode user data.")
+	// }
 
 	config, err := pgx.ParseConfig(os.Getenv("COCKROACHDB_URL"))
 	if err != nil {
@@ -71,7 +70,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	}
 	defer conn.Close(context.Background())
 
-	row := conn.QueryRow(context.Background(), `SELECT id FROM users WHERE id = $1;`, data.ID)
+	row := conn.QueryRow(context.Background(), `SELECT id FROM users WHERE id = $1;`, id)
 	ud := UserData{}
 	err = row.Scan(&ud.ID)
 	if err != pgx.ErrNoRows && err != nil {
@@ -81,7 +80,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 		return jsonErrorResponse(http.StatusNotFound, "User does not have an account.")
 	}
 
-	row = conn.QueryRow(context.Background(), `SELECT data FROM bulletins WHERE user_id = $1;`, data.ID)
+	row = conn.QueryRow(context.Background(), `SELECT data FROM bulletins WHERE user_id = $1;`, id)
 	bd := BulletinData{}
 	err = row.Scan(&bd.Data)
 	if err != pgx.ErrNoRows && err != nil {

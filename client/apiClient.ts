@@ -9,7 +9,7 @@ export const apiClient = axios.create({
 });
 
 export const githubClient = axios.create({
-  baseURL: "http://api.github.com/users/",
+  baseURL: "http://api.github.com/",
   headers: {
     Accept: "application/vnd.github+json",
   },
