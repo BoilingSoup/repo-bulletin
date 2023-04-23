@@ -23,7 +23,7 @@ export const usePublicContributions = ({ user, enabled: isMyPage }: Param) => {
   );
 };
 
-type PublicContributions = {
+export type PublicContribution = {
   id: number;
   name: string;
   full_name: string;
@@ -43,7 +43,7 @@ const fetchPublicContributions = (user: string | undefined) => async () => {
     return;
   }
 
-  const ret = await githubClient.get<PublicContributions[]>(
+  const ret = await githubClient.get<PublicContribution[]>(
     `/users/${user}/repos`
   );
   return ret.data;

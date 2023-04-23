@@ -4,6 +4,7 @@ import { AuthProvider } from "../contexts/AuthProvider";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
 import { Navbar } from "../components/Navbar";
+import "../public/styles.css";
 
 const queryClient = new QueryClient({
   defaultOptions: {

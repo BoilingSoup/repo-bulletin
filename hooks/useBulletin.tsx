@@ -4,18 +4,19 @@ import { AxiosError } from "axios";
 import { Dispatch, SetStateAction } from "react";
 // import { useAuth } from "../contexts/AuthProvider";
 import { newBulletin } from "../components/helpers";
+import { Updater } from "use-immer";
 
 type Param = {
   id: number | undefined;
   setNotFound: Dispatch<SetStateAction<boolean | undefined>>;
-  setBulletin: Dispatch<SetStateAction<Exclude<Bulletin, null> | undefined>>;
+  setBulletinClientData: Updater<Exclude<Bulletin, null> | undefined>;
   enabled: boolean;
 };
 
 export const useBulletin = ({
   id,
   setNotFound,
-  setBulletin,
+  setBulletinClientData,
   enabled: githubIsFetched,
 }: Param) => {
   // const { account } = useAuth();
@@ -35,12 +36,12 @@ export const useBulletin = ({
       // }
 
       if (data === null) {
-        setBulletin(newBulletin());
+        setBulletinClientData(newBulletin());
         setNotFound(false);
         return;
       }
 
-      setBulletin(data);
+      setBulletinClientData(data);
       setNotFound(false);
     },
     onError: (err: AxiosError) => {
@@ -53,14 +54,20 @@ export const useBulletin = ({
   });
 };
 
+export type Section = {
+  id: string;
+  name: string;
+  repos: number[];
+};
+
 export type Bulletin = {
-  sections: { id: string; name: string; repos: number[] }[];
+  sections: Section[];
 } | null;
 
 const fetchBulletin = (id: number | undefined) => async () => {
-  if(id === undefined) {
+  if (id === undefined) {
     // NOTE: should never reach here. Query is disabled until id is defined
-    return
+    return;
   }
   const ret = await apiClient.get<Bulletin>(`/bulletin?id=${id}`);
   return ret.data;

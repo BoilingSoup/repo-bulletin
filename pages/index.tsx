@@ -124,7 +124,7 @@ const Home: NextPage = () => {
         </Stack>
         <Center pos="absolute" bottom={20}>
           <Flex align={"center"}>
-            <Text color="dark.3">Repobullet.in - made by BoilingSoup</Text>
+            <Text color="dark.3">Repobullet.in - by BoilingSoup</Text>
             <Tooltip label="https://github.com/BoilingSoup">
               <ActionIcon
                 color="dark.3"
