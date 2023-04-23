@@ -24,9 +24,10 @@ import { NAVBAR_HEIGHT } from "../components/styles";
 import { NotFound } from "../components/NotFound";
 import { newBulletin } from "../components/helpers";
 import { useDisclosure } from "@mantine/hooks";
+import { usePublicContributions } from "../hooks/usePublicContributions";
 
 const User: NextPage = () => {
-  const { account, isFetched } = useAuth();
+  const { account, isFetched: accountIsFetched } = useAuth();
 
   const router = useRouter();
   const user = router.query.user as string | undefined;
@@ -36,20 +37,26 @@ const User: NextPage = () => {
     undefined
   );
 
-  const { data: bulletinData } = useBulletin({
+  const { data: bulletinData, isFetched: bulletinIsFetched } = useBulletin({
     user: user as string | undefined,
     setNotFound,
     setBulletin,
-    enabled: isFetched,
+    enabled: accountIsFetched,
   });
   // get avatar if user is in DB i.e. has a repobulletin account
   const { data: githubData, isFetched: githubIsFetched } = useGithub({
     user: user as string | undefined,
-    enabled: notFound,
+    enabled: bulletinIsFetched,
   });
-  // if user in DB && isMyPage, fetch my
 
   const isMyPage = account?.name.toLowerCase() === user?.toLowerCase();
+  // if user in DB && isMyPage, fetch my public contributions
+  const { data } = usePublicContributions({
+    user: user as string | undefined,
+    enabled: isMyPage,
+  });
+
+  // const isMyPage = account?.name.toLowerCase() === user?.toLowerCase();
   const isValidEditMode = isMyPage && router.query.edit === "true";
 
   const [opened, { open, close }] = useDisclosure(false);

@@ -4,24 +4,28 @@ import { githubClient } from "../client/apiClient";
 
 type Param = {
   user: string | undefined;
-  enabled: boolean | undefined;
+  enabled: boolean;
 };
 
-export const useGithub = ({ user, enabled }: Param) => {
-  return useQuery(["github", user], fetchGithub({ user, enabled }), {
-    onSuccess: (data) => {
-      // console.log(data);
-      // setNotFound(false);
-    },
-    onError: (err: AxiosError) => {
-      // if (err.response?.status === 404) {
-      // setNotFound(true);
-      //   return;
-      // }
-      console.log(err);
-    },
-    enabled: enabled !== undefined,
-  });
+export const useGithub = ({ user, enabled: bulletinIsFetched }: Param) => {
+  return useQuery(
+    ["github", user],
+    fetchGithub({ user, enabled: bulletinIsFetched }),
+    {
+      onSuccess: (data) => {
+        // console.log(data);
+        // setNotFound(false);
+      },
+      onError: (err: AxiosError) => {
+        // if (err.response?.status === 404) {
+        // setNotFound(true);
+        //   return;
+        // }
+        console.log(err);
+      },
+      enabled: bulletinIsFetched !== undefined,
+    }
+  );
 };
 
 type GithubResponse = {
