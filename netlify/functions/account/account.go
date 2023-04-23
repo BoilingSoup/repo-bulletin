@@ -104,7 +104,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 		},
-		Body: fmt.Sprintf(`{"id": "%d", "name": "%s"}`, dst.ID, data.Login),
+		Body: fmt.Sprintf(`{"id": %d, "name": "%s"}`, dst.ID, data.Login),
 	}, nil
 }
 

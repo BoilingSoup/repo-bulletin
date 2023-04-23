@@ -51,7 +51,7 @@ const User: NextPage = () => {
 
   const isMyPage = account?.name.toLowerCase() === user?.toLowerCase();
   // if user in DB && isMyPage, fetch my public contributions
-  const { data } = usePublicContributions({
+  const { data: contributions } = usePublicContributions({
     user: user as string | undefined,
     enabled: isMyPage,
   });
@@ -64,23 +64,31 @@ const User: NextPage = () => {
 
   return (
     <>
-      <Modal
-        opened={opened}
-        onClose={close}
-        title="Your public contributions"
-        centered
-        styles={{
-          close: {
-            background: theme.colors.github[7],
-            color: "white",
-            ":hover": { background: theme.colors.github[6] },
-          },
-          header: { background: theme.colors.github[7], color: "white" },
-          content: { background: theme.colors.github[7], height: "500px" },
-        }}
-      >
-        {/* Modal content */}
-      </Modal>
+      {isMyPage && (
+        <Modal
+          opened={opened}
+          onClose={close}
+          title="Your public contributions"
+          centered
+          styles={{
+            close: {
+              background: theme.colors.github[7],
+              color: "white",
+              ":hover": { background: theme.colors.github[6] },
+            },
+            header: { background: theme.colors.github[7], color: "white" },
+            content: { background: theme.colors.github[7], height: "500px" },
+          }}
+        >
+          <Stack>
+            {contributions?.map((contribution) => (
+              <Text key={contribution.id} color="dark.1">
+                {contribution.name}
+              </Text>
+            ))}
+          </Stack>
+        </Modal>
+      )}
       <Box
         sx={(theme) => ({
           width: "100vw",

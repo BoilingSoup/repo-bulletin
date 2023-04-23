@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: Props) => {
   const [account, setAccount] = useState<Account>(null);
   const { isLoading, isFetched } = useQuery(["account"], fetchAccount, {
     onSuccess: (user) => {
+      console.log(user);
       setAccount(user);
     },
     cacheTime: Infinity,
