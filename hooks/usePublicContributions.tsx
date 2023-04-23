@@ -6,7 +6,10 @@ type Param = {
   enabled: boolean;
 };
 
-export const usePublicContributions = ({ user, enabled: isMyPage }: Param) => {
+export const usePublicContributions = ({
+  user,
+  enabled: routeUserParamIsDefined,
+}: Param) => {
   return useQuery(
     ["contributions", user?.toLowerCase()],
     fetchPublicContributions(user),
@@ -18,7 +21,7 @@ export const usePublicContributions = ({ user, enabled: isMyPage }: Param) => {
       onError: () => {
         //
       },
-      enabled: isMyPage,
+      enabled: routeUserParamIsDefined,
     }
   );
 };
@@ -33,6 +36,7 @@ export type PublicContribution = {
     id: number;
   };
   description: string | null;
+  language: string | null;
   stargazers_count: number;
   forks_count: number;
 };

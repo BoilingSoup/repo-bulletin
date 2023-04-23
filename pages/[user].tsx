@@ -42,23 +42,24 @@ const User: NextPage = () => {
     setNotFound,
     enabled: user !== undefined,
   });
+  // get public repos from github
+  const { data: contributions, isFetched: publicContributionsFetched } =
+    usePublicContributions({
+      user: user as string | undefined,
+      enabled: user !== undefined,
+    });
 
-  // use id to check if there is bulletin in DB
+  // use github user id to check if there is bulletin in DB
   const { data: bulletinServerData, isFetched: bulletinIsFetched } =
     useBulletin({
       id: githubData?.id,
       setNotFound,
       setBulletinClientData: setBulletinClientData,
-      enabled: githubIsFetched && notFound !== true,
+      enabled:
+        githubIsFetched && publicContributionsFetched && notFound !== true,
     });
 
   const isMyPage = account?.name.toLowerCase() === user?.toLowerCase();
-  // if user in DB && isMyPage, fetch my public contributions ** if account?.name exists the user is in DB. **
-  const { data: contributions } = usePublicContributions({
-    user: user as string | undefined,
-    enabled: isMyPage,
-  });
-
   const isValidEditMode = isMyPage && router.query.edit === "true";
 
   return (
@@ -131,14 +132,16 @@ const User: NextPage = () => {
                 </Button>
               </Group>
             </Flex>
-            {bulletinClientData?.sections.map((section) => (
-              <SortableSection
-                key={section.id}
-                section={section}
-                contributions={contributions}
-                onChange={setBulletinClientData}
-              />
-            ))}
+            {publicContributionsFetched &&
+              bulletinClientData?.sections.map((section) => (
+                <SortableSection
+                  key={section.id}
+                  section={section}
+                  contributions={contributions}
+                  onChange={setBulletinClientData}
+                  user={user}
+                />
+              ))}
           </Container>
         )}
       </Box>
