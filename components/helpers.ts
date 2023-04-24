@@ -7,7 +7,7 @@ export const newBulletin = (): Exclude<Bulletin, null> => ({
 
 export const newSection = () => ({
   id: nanoid(),
-  name: "New Section",
+  name: "(Your Title Here)",
   repos: [],
 });
 

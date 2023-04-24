@@ -29,12 +29,12 @@ const User: NextPage = () => {
 
   const router = useRouter();
   const user = router.query.user as string | undefined;
-  console.log(user);
   const [notFound, setNotFound] = useState<boolean | undefined>(undefined);
 
   const [bulletinClientData, setBulletinClientData] = useImmer<
     Exclude<Bulletin, null> | undefined
   >(undefined);
+  console.log(bulletinClientData);
 
   // get avatar & id from github
   const { data: githubData, isFetched: githubIsFetched } = useGithub({
@@ -62,10 +62,26 @@ const User: NextPage = () => {
   const isMyPage = account?.name.toLowerCase() === user?.toLowerCase();
   const isValidEditMode = isMyPage && router.query.edit === "true";
 
+  const atLeastOneSectionHasNoName = bulletinClientData?.sections.some(
+    (section) => section.name.trim() === ""
+  );
+  const atLeastOneSectionHasNoRepos = bulletinClientData?.sections.some(
+    (section) => section.repos.length === 0
+  );
+
   const atLeastOneSectionHasNoNameOrRepos =
     bulletinClientData?.sections === undefined ||
-    bulletinClientData.sections.some((section) => section.name.trim() === "") ||
-    bulletinClientData.sections.some((section) => section.repos.length === 0);
+    atLeastOneSectionHasNoName ||
+    atLeastOneSectionHasNoRepos;
+
+  let warningText: string;
+  if (atLeastOneSectionHasNoName) {
+    warningText = "Section title must not be blank.";
+  } else if (atLeastOneSectionHasNoRepos) {
+    warningText = "All sections must have at least 1 repo.";
+  } else {
+    warningText = "";
+  }
 
   return (
     <>
@@ -131,30 +147,48 @@ const User: NextPage = () => {
                 top: 0,
               })}
             >
-              <Button
-                my="md"
-                color="lime.9"
-                onClick={() =>
-                  setBulletinClientData((prev) => {
-                    if (prev === undefined) return prev;
-                    prev.sections.push(newSection());
-                  })
-                }
-                disabled={atLeastOneSectionHasNoNameOrRepos}
-                sx={(theme) => ({
-                  ":disabled": {
-                    background: theme.colors.dark[8],
-                    color: theme.colors.dark[4],
-                  },
-                })}
-              >
-                <Flex mr="3px" align="center">
-                  <IconPlus />
-                </Flex>
-                Add Section
-              </Button>
+              <Flex>
+                <Button
+                  my="md"
+                  color="lime.9"
+                  onClick={() =>
+                    setBulletinClientData((prev) => {
+                      if (prev === undefined) return prev;
+                      prev.sections.push(newSection());
+                    })
+                  }
+                  disabled={atLeastOneSectionHasNoNameOrRepos}
+                  sx={(theme) => ({
+                    ":disabled": {
+                      background: theme.colors.dark[8],
+                      color: theme.colors.dark[4],
+                    },
+                  })}
+                >
+                  <Flex mr="3px" align="center">
+                    <IconPlus />
+                  </Flex>
+                  Add Section
+                </Button>
+              </Flex>
+              {warningText !== "" && (
+                <Text my="xl" color="yellow.2" span>
+                  {warningText}
+                </Text>
+              )}
+
               <Group my="md">
-                <Button w="90px" variant="gradient">
+                <Button
+                  w="90px"
+                  variant="gradient"
+                  disabled={warningText !== ""}
+                  sx={(theme) => ({
+                    ":disabled": {
+                      background: theme.colors.dark[8],
+                      color: theme.colors.dark[4],
+                    },
+                  })}
+                >
                   Save All
                 </Button>
                 <Button
