@@ -1,4 +1,5 @@
 import {
+  ActionIcon,
   Box,
   Button,
   Center,
@@ -11,7 +12,7 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { Bulletin, Section } from "../hooks/useBulletin";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconX } from "@tabler/icons-react";
 import { PublicContribution } from "../hooks/usePublicContributions";
 import { useDisclosure } from "@mantine/hooks";
 import { ChangeEventHandler, Fragment, useState } from "react";
@@ -19,6 +20,7 @@ import { Updater } from "use-immer";
 import { useQueryClient } from "react-query";
 import { SortableRepo } from "./SortableRepo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { useConfirmedDeleteStatus } from "../contexts/HasConfirmedProvider";
 
 type Props = {
   section: Section;
@@ -92,6 +94,34 @@ export const SortableSection = ({
     );
   };
 
+  const { hasConfirmedDelete, setHasConfirmedDelete } =
+    useConfirmedDeleteStatus();
+
+  const handleRemoveSection = () => {
+    if (section.repos.length > 3 && !hasConfirmedDelete) {
+      setShowConfirmDeleteSection((prev) => !prev);
+      return;
+    }
+    removeSection();
+  };
+
+  const removeSection = () => {
+    setBulletinClientData((prev) => {
+      if (prev === undefined) {
+        return prev;
+      }
+      if (showConfirmDeleteSection) {
+        setHasConfirmedDelete(true);
+      }
+      prev.sections.forEach((prevSection, index) => {
+        if (prevSection.id !== section.id) {
+          return;
+        }
+        prev.sections.splice(index, 1);
+      });
+    });
+  };
+
   const queryClient = useQueryClient();
   const publicContributionsCachedData = queryClient.getQueryData([
     "contributions",
@@ -99,6 +129,9 @@ export const SortableSection = ({
   ]) as PublicContribution[];
 
   const [parent, enableAnimations] = useAutoAnimate();
+
+  const [showConfirmDeleteSection, setShowConfirmDeleteSection] =
+    useState(false);
 
   return (
     <>
@@ -183,9 +216,66 @@ export const SortableSection = ({
           background: theme.colors.github[7],
           padding: theme.spacing.lg,
           borderRadius: theme.radius.lg,
+          position: "relative",
         })}
         mb="30px"
       >
+        {showConfirmDeleteSection && (
+          <Center
+            sx={(theme) => ({
+              background: theme.colors.github[8],
+              padding: theme.spacing.lg,
+              borderRadius: theme.radius.lg,
+              width: "100%",
+              height: "100%",
+              position: "absolute",
+              left: 0,
+              top: 0,
+              zIndex: 999,
+              flexDirection: "column",
+            })}
+          >
+            <Text color="dark.1" size="2.4rem" align="center" my="xl">
+              Are you sure you want to delete this section?
+            </Text>
+            <Flex>
+              <Button w={100} mr="md" onClick={removeSection} size="xl">
+                Yes
+              </Button>
+              <Button
+                w={100}
+                onClick={() => setShowConfirmDeleteSection(false)}
+                size="xl"
+              >
+                No
+              </Button>
+            </Flex>
+          </Center>
+        )}
+        <Center
+          pos="absolute"
+          right={-15}
+          top={-15}
+          sx={(theme) => ({
+            background: theme.colors.github[3],
+            width: "30px",
+            height: "30px",
+            borderRadius: "999999px",
+            zIndex: 1000,
+          })}
+        >
+          <ActionIcon
+            sx={(theme) => ({
+              color: "white",
+              borderRadius: "999999px",
+              ":hover": { background: theme.colors.github[4] },
+            })}
+            size={30}
+            onClick={handleRemoveSection}
+          >
+            <IconX />
+          </ActionIcon>
+        </Center>
         <TextInput
           value={section.name}
           onChange={handleChangeSectionName}

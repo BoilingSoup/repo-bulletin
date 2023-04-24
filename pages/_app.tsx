@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "react-query";
 import { ReactQueryDevtools } from "react-query/devtools";
 import { Navbar } from "../components/Navbar";
 import "../public/styles.css";
+import { ConfirmedDeleteStatusProvider } from "../contexts/HasConfirmedProvider";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,8 +42,10 @@ function MyApp({ Component, pageProps }: AppProps) {
         }}
       >
         <AuthProvider>
-          <Navbar />
-          <Component {...pageProps} />
+          <ConfirmedDeleteStatusProvider>
+            <Navbar />
+            <Component {...pageProps} />
+          </ConfirmedDeleteStatusProvider>
         </AuthProvider>
       </MantineProvider>
       <ReactQueryDevtools />
