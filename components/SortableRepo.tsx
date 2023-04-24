@@ -1,6 +1,6 @@
-import { Box, Flex, Paper, Text } from "@mantine/core";
+import { Box, Button, Flex, Paper, Text } from "@mantine/core";
 import { GrabberIcon, RepoForkedIcon } from "@primer/octicons-react";
-import { IconStar } from "@tabler/icons-react";
+import { IconStar, IconX } from "@tabler/icons-react";
 import { PublicContribution } from "../hooks/usePublicContributions";
 import { languageColors } from "./helpers";
 
@@ -89,6 +89,18 @@ export const SortableRepo = ({ contribution }: Props) => {
             {contribution.stargazers_count}
           </Text>
         )}
+        <Button
+          variant="subtle"
+          sx={(theme) => ({
+            color: "#7d8590",
+            ":hover": { background: theme.colors.github[9] },
+          })}
+          size="xs"
+          ml="auto"
+        >
+          <IconX />
+          Remove
+        </Button>
       </Flex>
     </Paper>
   );
