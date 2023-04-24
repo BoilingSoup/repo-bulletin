@@ -6,9 +6,13 @@ import { languageColors } from "./helpers";
 
 type Props = {
   contribution: PublicContribution;
+  onRemove: (id: number) => void;
 };
 
-export const SortableRepo = ({ contribution }: Props) => {
+export const SortableRepo = ({
+  contribution,
+  onRemove: handleRepoRemove,
+}: Props) => {
   return (
     <Paper
       sx={(theme) => ({
@@ -97,6 +101,7 @@ export const SortableRepo = ({ contribution }: Props) => {
           })}
           size="xs"
           ml="auto"
+          onClick={() => handleRepoRemove(contribution.id)}
         >
           <IconX />
           Remove

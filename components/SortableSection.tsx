@@ -7,13 +7,14 @@ import {
   Modal,
   Paper,
   Text,
+  TextInput,
   useMantineTheme,
 } from "@mantine/core";
 import { Bulletin, Section } from "../hooks/useBulletin";
 import { IconPlus } from "@tabler/icons-react";
 import { PublicContribution } from "../hooks/usePublicContributions";
 import { useDisclosure } from "@mantine/hooks";
-import { Fragment, useState } from "react";
+import { ChangeEventHandler, Fragment, useState } from "react";
 import { Updater } from "use-immer";
 import { useQueryClient } from "react-query";
 import { SortableRepo } from "./SortableRepo";
@@ -42,6 +43,47 @@ export const SortableSection = ({
       }
       return [...prev, contributionID];
     });
+  };
+
+  const handleChangeSectionName: ChangeEventHandler<HTMLInputElement> = (
+    event
+  ) => {
+    setBulletinClientData((prev) => {
+      if (prev === undefined) {
+        return prev;
+      }
+      const currSectionIndex = prev.sections.findIndex(
+        (prevStateSection) => prevStateSection.id === section.id
+      );
+      if (currSectionIndex === -1) {
+        return prev;
+      }
+      const currSection = prev.sections[currSectionIndex];
+      currSection.name = event.target.value;
+    });
+  };
+
+  const handleRemoveRepo = (contributionID: number) => {
+    setBulletinClientData((prev) => {
+      if (prev === undefined) {
+        return prev;
+      }
+      const currSectionIndex = prev.sections.findIndex(
+        (prevStateSection) => prevStateSection.id === section.id
+      );
+      if (currSectionIndex === -1) {
+        return prev;
+      }
+      const currSection = prev.sections[currSectionIndex];
+      const repoIDIndex = currSection.repos.findIndex(
+        (repoID) => repoID === contributionID
+      );
+      currSection.repos.splice(repoIDIndex, 1);
+    });
+
+    setCheckedRepos((prev) =>
+      prev.filter((repoID) => repoID !== contributionID)
+    );
   };
 
   const addButtonText =
@@ -81,8 +123,6 @@ export const SortableSection = ({
           <Flex direction="column">
             {contributions?.map((contribution) => (
               <Fragment key={contribution.id}>
-                {/* <ContributionListItem contribution={contribution} /> */}
-
                 <Flex
                   align={"center"}
                   sx={(theme) => ({
@@ -140,18 +180,23 @@ export const SortableSection = ({
           borderRadius: theme.radius.lg,
         })}
       >
-        <Text
-          color="dark.0"
-          size="2rem"
-          component="h1"
-          sx={(theme) => ({
-            border: `1px dashed ${theme.colors.dark[2]}`,
-            borderRadius: theme.radius.lg,
-          })}
-        >
-          {section.name}
-        </Text>
-        {section.repos.length === 0 && (
+        <TextInput
+          value={section.name}
+          onChange={handleChangeSectionName}
+          styles={{
+            input: {
+              background: theme.colors.github[7],
+              border: `1px dashed ${theme.colors.dark[2]}`,
+              borderRadius: theme.radius.lg,
+              color: "white",
+              fontSize: "2rem",
+              height: "50px",
+              padding: "1rem",
+              marginBottom: "1rem",
+            },
+          }}
+        />
+        {section.repos.length === 0 ? (
           <Center
             h="200px"
             w="100%"
@@ -161,11 +206,26 @@ export const SortableSection = ({
             })}
           >
             <Button
-              bg="none"
+              bg="github.3"
+              leftIcon={<IconPlus />}
+              sx={(theme) => ({
+                ":hover": {
+                  background: theme.colors.github[4],
+                },
+              })}
+              onClick={open}
+            >
+              Add Repos
+            </Button>
+          </Center>
+        ) : (
+          <Center>
+            <Button
+              bg="github.3"
               leftIcon={<IconPlus />}
               sx={{
                 ":hover": {
-                  background: "none",
+                  background: theme.colors.github[4],
                 },
               }}
               onClick={open}
@@ -175,18 +235,24 @@ export const SortableSection = ({
           </Center>
         )}
 
-        {section.repos.length > 0 && (
-          <Flex wrap={"wrap"} justify={"space-between"}>
-            {section.repos.map((repoID) => {
-              const contributionIndex = publicContributionsCachedData.findIndex(
-                (contribution) => contribution.id === repoID
-              );
-              const contribution =
-                publicContributionsCachedData[contributionIndex];
-              return <SortableRepo key={repoID} contribution={contribution} />;
-            })}
-          </Flex>
-        )}
+        {/* {section.repos.length > 0 && ( */}
+        <Flex wrap={"wrap"} justify={"space-between"}>
+          {section.repos.map((repoID) => {
+            const contributionIndex = publicContributionsCachedData.findIndex(
+              (contribution) => contribution.id === repoID
+            );
+            const contribution =
+              publicContributionsCachedData[contributionIndex];
+            return (
+              <SortableRepo
+                key={repoID}
+                contribution={contribution}
+                onRemove={handleRemoveRepo}
+              />
+            );
+          })}
+        </Flex>
+        {/* )} */}
       </Paper>
     </>
   );
