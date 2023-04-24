@@ -13,6 +13,7 @@ import {
 } from "@mantine/core";
 import { Bulletin, Section } from "../hooks/useBulletin";
 import { IconPlus, IconX } from "@tabler/icons-react";
+import { GrabberIcon } from "@primer/octicons-react";
 import { PublicContribution } from "../hooks/usePublicContributions";
 import { useDisclosure } from "@mantine/hooks";
 import { ChangeEventHandler, Fragment, useState } from "react";
@@ -263,6 +264,7 @@ export const SortableSection = ({
         sx={(theme) => ({
           background: theme.colors.github[7],
           padding: theme.spacing.lg,
+          paddingTop: 0,
           borderRadius: theme.radius.lg,
           position: "relative",
         })}
@@ -270,8 +272,9 @@ export const SortableSection = ({
         ref={setNodeRef}
         style={style}
       >
-        <Center {...attributes} {...listeners}>
-          <Text color="white">.............MOVE ME...............</Text>
+        <Center {...attributes} {...listeners} h={50}>
+          <GrabberIcon fill="white" size={30} />{" "}
+          <Text color="dark.0">Drag & Move</Text>
         </Center>
         {showConfirmDeleteSection && (
           <Center
