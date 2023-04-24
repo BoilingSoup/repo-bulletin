@@ -69,6 +69,7 @@ export const SortableSection = ({
   const handleCloseModalDontApplyChanges = () => {
     setCheckedRepos(section.repos);
     close();
+    setSearchInput("");
   };
 
   const handleRemoveRepo = (contributionID: number) => {
@@ -133,6 +134,8 @@ export const SortableSection = ({
   const [showConfirmDeleteSection, setShowConfirmDeleteSection] =
     useState(false);
 
+  const [searchInput, setSearchInput] = useState("");
+
   return (
     <>
       <Modal
@@ -155,31 +158,58 @@ export const SortableSection = ({
           },
         }}
       >
+        <TextInput
+          px="md"
+          my="md"
+          placeholder="Search for a repo"
+          value={searchInput}
+          styles={{
+            input: {
+              background: theme.colors.github[4],
+              color: theme.colors.blue[1],
+              border: `1px solid ${theme.colors.github[2]}`,
+            },
+          }}
+          onChange={(event) => {
+            setSearchInput(event.target.value);
+          }}
+        />
         <Box h="400px" sx={{ overflow: "auto" }}>
           <Flex direction="column">
-            {contributions?.map((contribution) => (
-              <Fragment key={contribution.id}>
-                <Flex
-                  align={"center"}
-                  sx={(theme) => ({
-                    height: "50px",
-                    paddingLeft: theme.spacing.md,
-                    ":hover": {
-                      background: theme.colors.github[5],
-                      cursor: "pointer",
-                    },
-                  })}
-                  onClick={handleListItemOnClick(contribution.id)}
-                >
-                  <Checkbox
-                    mr="lg"
-                    checked={checkedRepos.includes(contribution.id)}
-                    readOnly
-                  />
-                  <Text color="dark.1">{contribution.name}</Text>
-                </Flex>
-              </Fragment>
-            ))}
+            {contributions?.map((contribution) => {
+              if (
+                contribution.name
+                  .trim()
+                  .toLowerCase()
+                  .includes(searchInput.trim().toLowerCase())
+              ) {
+                return (
+                  <Fragment key={contribution.id}>
+                    <Flex
+                      align={"center"}
+                      sx={(theme) => ({
+                        height: "50px",
+                        paddingLeft: theme.spacing.md,
+                        ":hover": {
+                          background: theme.colors.github[5],
+                          cursor: "pointer",
+                        },
+                      })}
+                      onClick={handleListItemOnClick(contribution.id)}
+                    >
+                      <Checkbox
+                        mr="lg"
+                        checked={checkedRepos.includes(contribution.id)}
+                        readOnly
+                      />
+                      <Text color="dark.1">{contribution.name}</Text>
+                    </Flex>
+                  </Fragment>
+                );
+              }
+
+              return;
+            })}
           </Flex>
         </Box>
         <Flex justify={"end"} my="xs" mr="md">
@@ -204,6 +234,7 @@ export const SortableSection = ({
               });
 
               close();
+              setSearchInput("");
             }}
           >
             Apply
