@@ -272,7 +272,7 @@ export const SortableSection = ({
         ref={setNodeRef}
         style={style}
       >
-        <Center {...attributes} {...listeners} h={50}>
+        <Center {...attributes} {...listeners} h={50} sx={{ cursor: "grab" }}>
           <GrabberIcon fill="white" size={30} />{" "}
           <Text color="dark.0">Drag & Move</Text>
         </Center>
