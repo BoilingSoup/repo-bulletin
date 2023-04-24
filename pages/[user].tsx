@@ -74,6 +74,7 @@ const User: NextPage = () => {
           width: "100vw",
           height: "100vh",
           background: theme.colors.github[9],
+          overflowX: "hidden",
         })}
         pt={NAVBAR_HEIGHT}
       >
@@ -127,7 +128,7 @@ const User: NextPage = () => {
                 height: NAVBAR_HEIGHT,
                 zIndex: 9999999,
                 background: theme.colors.github[9],
-                top: NAVBAR_HEIGHT,
+                top: 0,
               })}
             >
               <Button
