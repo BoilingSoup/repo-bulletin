@@ -21,6 +21,8 @@ import { useQueryClient } from "react-query";
 import { SortableRepo } from "./SortableRepo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useConfirmedDeleteStatus } from "../contexts/HasConfirmedProvider";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Props = {
   section: Section;
@@ -136,6 +138,21 @@ export const SortableSection = ({
 
   const [searchInput, setSearchInput] = useState("");
 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: section.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.2 : 1,
+  };
+
   return (
     <>
       <Modal
@@ -250,7 +267,12 @@ export const SortableSection = ({
           position: "relative",
         })}
         mb="30px"
+        ref={setNodeRef}
+        style={style}
       >
+        <Center {...attributes} {...listeners}>
+          <Text color="white">.............MOVE ME...............</Text>
+        </Center>
         {showConfirmDeleteSection && (
           <Center
             sx={(theme) => ({

@@ -24,6 +24,16 @@ import { newBulletin, newSection } from "../components/helpers";
 import { usePublicContributions } from "../hooks/usePublicContributions";
 import { SortableSection } from "../components/SortableSection";
 import { useImmer } from "use-immer";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 const User: NextPage = () => {
   const { account, isFetched: accountIsFetched } = useAuth();
@@ -86,6 +96,15 @@ const User: NextPage = () => {
 
   const [parent, enableAnimations] = useAutoAnimate();
 
+  const [dragActiveID, setDragActiveID] = useState<string | null>(null);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setDragActiveID(event.active.id as string);
+  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    setDragActiveID(null);
+  };
+
   return (
     <>
       <Box
@@ -139,7 +158,7 @@ const User: NextPage = () => {
             </Center>
           )}
         {isValidEditMode && githubIsFetched && (
-          <Container ref={parent}>
+          <Container>
             <Flex
               justify={"space-between"}
               sx={(theme) => ({
@@ -207,16 +226,52 @@ const User: NextPage = () => {
               </Group>
             </Flex>
             <Box pt={30}></Box>
-            {publicContributionsFetched &&
-              bulletinClientData?.sections.map((section) => (
-                <SortableSection
-                  key={section.id}
-                  section={section}
-                  contributions={contributions}
-                  onChange={setBulletinClientData}
-                  user={user}
-                />
-              ))}
+            <DndContext
+              id="dnd"
+              onDragStart={handleDragStart}
+              onDragOver={() => console.log("dragOver")}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={
+                  bulletinClientData?.sections.map((section) => section.id) ?? [
+                    "ZZZZZ",
+                  ]
+                }
+                strategy={verticalListSortingStrategy}
+              >
+                <Box ref={parent}>
+                  {publicContributionsFetched &&
+                    bulletinClientData?.sections.map((section) => (
+                      <SortableSection
+                        key={section.id}
+                        section={section}
+                        contributions={contributions}
+                        onChange={setBulletinClientData}
+                        user={user}
+                      />
+                    ))}
+                </Box>
+              </SortableContext>
+              <DragOverlay>
+                {dragActiveID ? (
+                  <SortableSection
+                    section={(() => {
+                      const draggedSectionIndex =
+                        bulletinClientData!.sections.findIndex(
+                          (section) => section.id === dragActiveID
+                        );
+                      const draggedSection =
+                        bulletinClientData!.sections[draggedSectionIndex];
+                      return draggedSection;
+                    })()}
+                    contributions={contributions}
+                    onChange={setBulletinClientData}
+                    user={user}
+                  />
+                ) : null}
+              </DragOverlay>
+            </DndContext>
           </Container>
         )}
       </Box>
