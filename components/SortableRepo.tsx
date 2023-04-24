@@ -28,7 +28,7 @@ export const SortableRepo = ({ contribution }: Props) => {
     >
       <Flex direction={"column"}>
         <Flex align={"center"}>
-          <Text color="#2F81F7" size="16px">
+          <Text color="#2F81F7" size="16px" weight={"bold"}>
             {contribution.name}
           </Text>
           <Box ml="auto" sx={{ cursor: "grab" }}>
