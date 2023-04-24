@@ -18,6 +18,7 @@ import { ChangeEventHandler, Fragment, useState } from "react";
 import { Updater } from "use-immer";
 import { useQueryClient } from "react-query";
 import { SortableRepo } from "./SortableRepo";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 
 type Props = {
   section: Section;
@@ -96,6 +97,8 @@ export const SortableSection = ({
     "contributions",
     user?.toLowerCase(),
   ]) as PublicContribution[];
+
+  const [parent, enableAnimations] = useAutoAnimate();
 
   return (
     <>
@@ -238,8 +241,7 @@ export const SortableSection = ({
           </Center>
         )}
 
-        {/* {section.repos.length > 0 && ( */}
-        <Flex wrap={"wrap"} justify={"space-between"}>
+        <Flex wrap={"wrap"} justify={"space-between"} ref={parent}>
           {section.repos.map((repoID) => {
             const contributionIndex = publicContributionsCachedData.findIndex(
               (contribution) => contribution.id === repoID
@@ -255,7 +257,6 @@ export const SortableSection = ({
             );
           })}
         </Flex>
-        {/* )} */}
       </Paper>
     </>
   );

@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 import { NextPage } from "next";
 import { useRouter } from "next/router";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Bulletin, useBulletin } from "../hooks/useBulletin";
 import { useState } from "react";
 import { IconPencil, IconPlus } from "@tabler/icons-react";
@@ -83,6 +84,8 @@ const User: NextPage = () => {
     warningText = "";
   }
 
+  const [parent, enableAnimations] = useAutoAnimate();
+
   return (
     <>
       <Box
@@ -136,7 +139,7 @@ const User: NextPage = () => {
             </Center>
           )}
         {isValidEditMode && githubIsFetched && (
-          <Container>
+          <Container ref={parent}>
             <Flex
               justify={"space-between"}
               sx={(theme) => ({
