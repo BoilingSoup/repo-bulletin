@@ -63,6 +63,11 @@ export const SortableSection = ({
     });
   };
 
+  const handleCloseModalDontApplyChanges = () => {
+    setCheckedRepos(section.repos);
+    close();
+  };
+
   const handleRemoveRepo = (contributionID: number) => {
     setBulletinClientData((prev) => {
       if (prev === undefined) {
@@ -86,11 +91,6 @@ export const SortableSection = ({
     );
   };
 
-  const addButtonText =
-    checkedRepos.length !== 1
-      ? `Add ${checkedRepos.length} repos`
-      : `Add 1 repo`;
-
   const queryClient = useQueryClient();
   const publicContributionsCachedData = queryClient.getQueryData([
     "contributions",
@@ -101,7 +101,7 @@ export const SortableSection = ({
     <>
       <Modal
         opened={opened}
-        onClose={close}
+        onClose={handleCloseModalDontApplyChanges}
         title="Your public repos"
         centered
         styles={{
@@ -166,9 +166,11 @@ export const SortableSection = ({
                 const currSection = prev.sections[currSectionIndex];
                 currSection.repos = checkedRepos;
               });
+
+              close();
             }}
           >
-            {addButtonText}
+            Apply
           </Button>
         </Flex>
       </Modal>
@@ -179,6 +181,7 @@ export const SortableSection = ({
           padding: theme.spacing.lg,
           borderRadius: theme.radius.lg,
         })}
+        mb="30px"
       >
         <TextInput
           value={section.name}

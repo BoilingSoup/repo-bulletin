@@ -12,14 +12,15 @@ export const Navbar = () => {
 
   return (
     <Flex
-      pos="absolute"
-      sx={{
+      pos="fixed"
+      sx={(theme) => ({
         zIndex: 9999,
         height: NAVBAR_HEIGHT,
         alignItems: "center",
         justifyContent: "space-between",
         width: "100%",
-      }}
+        background: theme.colors.github[9],
+      })}
     >
       <Text ml="xl" size="1.4rem" color="white" component={Link} href="/">
         Repobullet.in
