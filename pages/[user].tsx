@@ -12,7 +12,7 @@ import {
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { Bulletin, useBulletin } from "../hooks/useBulletin";
+import { Bulletin, Section, useBulletin } from "../hooks/useBulletin";
 import { useState } from "react";
 import { IconPencil, IconPlus } from "@tabler/icons-react";
 import { useGithub } from "../hooks/useGithub";
@@ -21,7 +21,10 @@ import Link from "next/link";
 import { NAVBAR_HEIGHT } from "../components/styles";
 import { NotFound } from "../components/NotFound";
 import { newBulletin, newSection } from "../components/helpers";
-import { usePublicContributions } from "../hooks/usePublicContributions";
+import {
+  PublicContribution,
+  usePublicContributions,
+} from "../hooks/usePublicContributions";
 import { SortableSection } from "../components/SortableSection";
 import { useImmer } from "use-immer";
 import {
@@ -36,7 +39,8 @@ import {
   arraySwap,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { ClientReferenceManifestPlugin } from "next/dist/build/webpack/plugins/flight-manifest-plugin";
+import { useQueryClient } from "react-query";
+import { SortableRepo } from "../components/SortableRepo";
 
 const User: NextPage = () => {
   const { account, isFetched: accountIsFetched } = useAuth();
@@ -99,10 +103,35 @@ const User: NextPage = () => {
 
   const [parent, enableAnimations] = useAutoAnimate();
 
-  const [dragActiveID, setDragActiveID] = useState<string | null>(null);
+  const [dragActiveItem, setDragActiveItem] = useState<
+    Section | PublicContribution | null
+  >(null);
+  const queryClient = useQueryClient();
 
   const handleDragStart = (event: DragStartEvent) => {
-    setDragActiveID(event.active.id as string);
+    const draggableType = event.active.data.current?.type as "SECTION" | "REPO";
+    if (draggableType === "SECTION") {
+      const sectionIndex = bulletinClientData?.sections.findIndex(
+        (section) => section.id === event.active.id
+      ) as number;
+      const section = bulletinClientData?.sections[sectionIndex];
+      setDragActiveItem(section as Section);
+      return;
+    }
+
+    if (draggableType === "REPO") {
+      const contributions = queryClient.getQueryData([
+        "contributions",
+        user?.toLowerCase(),
+      ]) as PublicContribution[];
+
+      const contributionObjIndex = contributions.findIndex(
+        (contribution) => contribution.id === event.active.id
+      );
+      const contribution = contributions[contributionObjIndex];
+      setDragActiveItem(contribution);
+      return;
+    }
   };
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
@@ -124,7 +153,7 @@ const User: NextPage = () => {
     });
   };
   const handleDragEnd = (event: DragEndEvent) => {
-    setDragActiveID(null);
+    // setDragActiveID(null);
   };
 
   return (
@@ -276,22 +305,30 @@ const User: NextPage = () => {
                 </Box>
               </SortableContext>
               <DragOverlay>
-                {dragActiveID ? (
-                  <SortableSection
-                    section={(() => {
-                      const draggedSectionIndex =
-                        bulletinClientData!.sections.findIndex(
-                          (section) => section.id === dragActiveID
-                        );
-                      const draggedSection =
-                        bulletinClientData!.sections[draggedSectionIndex];
-                      return draggedSection;
-                    })()}
-                    contributions={contributions}
-                    onChange={setBulletinClientData}
-                    user={user}
-                  />
-                ) : null}
+                {dragActiveItem !== null &&
+                  typeof dragActiveItem.id === "string" && (
+                    <SortableSection
+                      section={(() => {
+                        const draggedSectionIndex =
+                          bulletinClientData!.sections.findIndex(
+                            (section) => section.id === dragActiveItem.id
+                          );
+                        const draggedSection =
+                          bulletinClientData!.sections[draggedSectionIndex];
+                        return draggedSection;
+                      })()}
+                      contributions={contributions}
+                      onChange={setBulletinClientData}
+                      user={user}
+                    />
+                  )}
+                {dragActiveItem !== null &&
+                  typeof dragActiveItem.id === "number" && (
+                    <SortableRepo
+                      contribution={dragActiveItem as PublicContribution}
+                      onRemove={() => {}}
+                    />
+                  )}
               </DragOverlay>
             </DndContext>
           </Container>

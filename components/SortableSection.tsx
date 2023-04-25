@@ -22,7 +22,7 @@ import { useQueryClient } from "react-query";
 import { SortableRepo } from "./SortableRepo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useConfirmedDeleteStatus } from "../contexts/HasConfirmedProvider";
-import { useSortable } from "@dnd-kit/sortable";
+import { SortableContext, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
 type Props = {
@@ -146,7 +146,7 @@ export const SortableSection = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: section.id });
+  } = useSortable({ id: section.id, data: { type: "SECTION" } });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -387,22 +387,24 @@ export const SortableSection = ({
           </Center>
         )}
 
-        <Flex wrap={"wrap"} justify={"space-between"} ref={parent}>
-          {section.repos.map((repoID) => {
-            const contributionIndex = publicContributionsCachedData.findIndex(
-              (contribution) => contribution.id === repoID
-            );
-            const contribution =
-              publicContributionsCachedData[contributionIndex];
-            return (
-              <SortableRepo
-                key={repoID}
-                contribution={contribution}
-                onRemove={handleRemoveRepo}
-              />
-            );
-          })}
-        </Flex>
+        <SortableContext items={section.repos}>
+          <Flex wrap={"wrap"} justify={"space-between"} ref={parent}>
+            {section.repos.map((repoID) => {
+              const contributionIndex = publicContributionsCachedData.findIndex(
+                (contribution) => contribution.id === repoID
+              );
+              const contribution =
+                publicContributionsCachedData[contributionIndex];
+              return (
+                <SortableRepo
+                  key={repoID}
+                  contribution={contribution}
+                  onRemove={handleRemoveRepo}
+                />
+              );
+            })}
+          </Flex>
+        </SortableContext>
       </Paper>
     </>
   );

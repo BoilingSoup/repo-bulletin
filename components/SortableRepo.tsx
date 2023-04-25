@@ -3,6 +3,8 @@ import { GrabberIcon, RepoForkedIcon } from "@primer/octicons-react";
 import { IconStar, IconX } from "@tabler/icons-react";
 import { PublicContribution } from "../hooks/usePublicContributions";
 import { languageColors } from "./helpers";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Props = {
   contribution: PublicContribution;
@@ -13,6 +15,21 @@ export const SortableRepo = ({
   contribution,
   onRemove: handleRepoRemove,
 }: Props) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: contribution.id, data: { type: "REPO" } });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.2 : 1,
+  };
+
   return (
     <Paper
       sx={(theme) => ({
@@ -29,13 +46,15 @@ export const SortableRepo = ({
         flexDirection: "column",
         justifyContent: "space-between",
       })}
+      ref={setNodeRef}
+      style={style}
     >
       <Flex direction={"column"}>
         <Flex align={"center"}>
           <Text color="#2F81F7" size="16px" weight={"bold"}>
             {contribution.name}
           </Text>
-          <Box ml="auto" sx={{ cursor: "grab" }}>
+          <Box {...attributes} {...listeners} ml="auto" sx={{ cursor: "grab" }}>
             <GrabberIcon size={16} fill="#7d8590" />
           </Box>
         </Flex>
