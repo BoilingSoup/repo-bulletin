@@ -16,7 +16,7 @@ import { IconPlus, IconX } from "@tabler/icons-react";
 import { GrabberIcon } from "@primer/octicons-react";
 import { PublicContribution } from "../hooks/usePublicContributions";
 import { useDisclosure } from "@mantine/hooks";
-import { ChangeEventHandler, Fragment, useState } from "react";
+import { ChangeEventHandler, Fragment, RefCallback, useState } from "react";
 import { Updater } from "use-immer";
 import { useQueryClient } from "react-query";
 import { SortableRepo } from "./SortableRepo";
@@ -35,6 +35,7 @@ type Props = {
   contributions: PublicContribution[] | undefined;
   onChange: Updater<Exclude<Bulletin, null> | undefined>;
   user: string | undefined;
+  animateReposRef: RefCallback<Element>;
 };
 
 export const SortableSection = ({
@@ -42,6 +43,7 @@ export const SortableSection = ({
   contributions,
   onChange: setBulletinClientData,
   user,
+  animateReposRef,
 }: Props) => {
   const theme = useMantineTheme();
   const [opened, { open, close }] = useDisclosure(false);
@@ -137,7 +139,7 @@ export const SortableSection = ({
     user?.toLowerCase(),
   ]) as PublicContribution[];
 
-  const [parent, enableAnimations] = useAutoAnimate();
+  // const [parent, enableAnimations] = useAutoAnimate();
 
   const [showConfirmDeleteSection, setShowConfirmDeleteSection] =
     useState(false);
@@ -396,7 +398,7 @@ export const SortableSection = ({
         )}
 
         <SortableContext items={section.repos} strategy={rectSortingStrategy}>
-          <Flex wrap={"wrap"} justify={"space-between"} ref={parent}>
+          <Flex wrap={"wrap"} justify={"space-between"} ref={animateReposRef}>
             {section.repos.map((repo) => {
               const contributionIndex = publicContributionsCachedData.findIndex(
                 (contribution) => contribution.id === repo.repoID

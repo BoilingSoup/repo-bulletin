@@ -101,7 +101,8 @@ const User: NextPage = () => {
     warningText = "";
   }
 
-  const [parent, enableAnimations] = useAutoAnimate();
+  const [parent /*, enableAnimations*/] = useAutoAnimate();
+  const [reposAnimateRef, enableReposAutoAnimate] = useAutoAnimate();
 
   const [dragActiveItem, setDragActiveItem] = useState<
     Section | PublicContribution | null
@@ -109,6 +110,7 @@ const User: NextPage = () => {
   const queryClient = useQueryClient();
 
   const handleDragStart = (event: DragStartEvent) => {
+    enableReposAutoAnimate(false);
     const draggableType = event.active.data.current?.type as "SECTION" | "REPO";
     if (draggableType === "SECTION") {
       const sectionIndex = bulletinClientData?.sections.findIndex(
@@ -193,6 +195,7 @@ const User: NextPage = () => {
     }
   };
   const handleDragEnd = (event: DragEndEvent) => {
+    enableReposAutoAnimate(true);
     setDragActiveItem(null);
   };
 
@@ -340,6 +343,7 @@ const User: NextPage = () => {
                         contributions={contributions}
                         onChange={setBulletinClientData}
                         user={user}
+                        animateReposRef={reposAnimateRef}
                       />
                     ))}
                 </Box>
@@ -348,6 +352,7 @@ const User: NextPage = () => {
                 {dragActiveItem !== null &&
                   typeof dragActiveItem.id === "string" && (
                     <SortableSection
+                      animateReposRef={reposAnimateRef}
                       section={(() => {
                         const draggedSectionIndex =
                           bulletinClientData!.sections.findIndex(
