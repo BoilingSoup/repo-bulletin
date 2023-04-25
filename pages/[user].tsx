@@ -393,6 +393,37 @@ const User: NextPage = () => {
           bulletinIsFetched &&
           bulletinServerData !== null && (
             <Container>
+              <Center mt={40}>
+                <Image
+                  src={githubData?.avatar_url}
+                  height={100}
+                  width={100}
+                  radius={9999}
+                />
+                <Text color="white" ml="xl" size="2rem" pos={"relative"}>
+                  {githubData?.login}
+
+                  {isMyPage && (
+                    <Button
+                      variant="gradient"
+                      leftIcon={<IconPencil />}
+                      size="lg"
+                      component={Link}
+                      href={`/${user}?edit=true`}
+                      onClick={() => setBulletinClientData(newBulletin())}
+                      compact
+                      pos="absolute"
+                      ml="auto"
+                      mr="auto"
+                      left={0}
+                      right={0}
+                      bottom={-40}
+                    >
+                      Edit
+                    </Button>
+                  )}
+                </Text>
+              </Center>
               {bulletinClientData?.sections.map((section) => {
                 const queryClient = useQueryClient();
                 const publicContributionsCachedData = queryClient.getQueryData([
@@ -409,11 +440,12 @@ const User: NextPage = () => {
                         height: "50px",
                         padding: "1rem",
                         marginBottom: "1rem",
+                        marginTop: "3rem",
                       }}
                     >
                       {section.name}
                     </Text>
-                    <Flex wrap={"wrap"} justify={"space-between"} mb={"lg"}>
+                    <Flex wrap={"wrap"} justify={"space-between"}>
                       {section.repos.map((repo) => {
                         const contributionIndex =
                           publicContributionsCachedData.findIndex(
