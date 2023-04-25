@@ -14,7 +14,7 @@ import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Bulletin, Section, useBulletin } from "../hooks/useBulletin";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { IconPencil, IconPlus, IconStar } from "@tabler/icons-react";
 import { useGithub } from "../hooks/useGithub";
 import { useAuth } from "../contexts/AuthProvider";
@@ -413,7 +413,7 @@ const User: NextPage = () => {
                     >
                       {section.name}
                     </Text>
-                    <Flex wrap={"wrap"} justify={"space-between"}>
+                    <Flex wrap={"wrap"} justify={"space-between"} mb={"lg"}>
                       {section.repos.map((repo) => {
                         const contributionIndex =
                           publicContributionsCachedData.findIndex(
