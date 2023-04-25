@@ -13,7 +13,7 @@ import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Bulletin, Section, useBulletin } from "../hooks/useBulletin";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IconPencil, IconPlus } from "@tabler/icons-react";
 import { useGithub } from "../hooks/useGithub";
 import { useAuth } from "../contexts/AuthProvider";
@@ -199,6 +199,8 @@ const User: NextPage = () => {
     setDragActiveItem(null);
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   return (
     <>
       <Box
@@ -262,6 +264,7 @@ const User: NextPage = () => {
                 background: theme.colors.github[9],
                 top: 0,
               })}
+              ref={containerRef}
             >
               <Flex>
                 <Button
@@ -372,6 +375,12 @@ const User: NextPage = () => {
                     <SortableRepo
                       contribution={dragActiveItem as PublicContribution}
                       onRemove={() => {}}
+                      mediaQueryWidth={(() => {
+                        const xPadding = 40;
+                        return `${
+                          (containerRef.current!.offsetWidth - xPadding) * 0.49
+                        }px`;
+                      })()}
                     />
                   )}
               </DragOverlay>

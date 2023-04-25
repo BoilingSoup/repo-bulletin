@@ -12,6 +12,7 @@ type Props = {
   onRemove: (id: number) => void;
   repo?: { id: string; repoID: number };
   section?: Section;
+  mediaQueryWidth?: string;
 };
 
 export const SortableRepo = ({
@@ -19,6 +20,7 @@ export const SortableRepo = ({
   onRemove: handleRepoRemove,
   repo,
   section,
+  mediaQueryWidth,
 }: Props) => {
   const {
     attributes,
@@ -44,7 +46,7 @@ export const SortableRepo = ({
         width: "100%",
         background: theme.colors.github[9],
         "@media (min-width: 45em)": {
-          width: "49%",
+          width: mediaQueryWidth ?? "49%",
         },
         border: "#30363d 1px solid",
         borderRadius: "6px",
