@@ -27,13 +27,16 @@ import { useImmer } from "use-immer";
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
+  arraySwap,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { ClientReferenceManifestPlugin } from "next/dist/build/webpack/plugins/flight-manifest-plugin";
 
 const User: NextPage = () => {
   const { account, isFetched: accountIsFetched } = useAuth();
@@ -100,6 +103,25 @@ const User: NextPage = () => {
 
   const handleDragStart = (event: DragStartEvent) => {
     setDragActiveID(event.active.id as string);
+  };
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (over === null) {
+      return;
+    }
+
+    setBulletinClientData((prev) => {
+      if (prev === undefined) {
+        return prev;
+      }
+      const activeSectionIndex = prev.sections.findIndex(
+        (section) => section.id === active.id
+      );
+      const overIndex = prev.sections.findIndex(
+        (section) => section.id === over.id
+      );
+      prev.sections = arraySwap(prev.sections, activeSectionIndex, overIndex);
+    });
   };
   const handleDragEnd = (event: DragEndEvent) => {
     setDragActiveID(null);
@@ -229,7 +251,7 @@ const User: NextPage = () => {
             <DndContext
               id="dnd"
               onDragStart={handleDragStart}
-              onDragOver={() => console.log("dragOver")}
+              onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
               <SortableContext
