@@ -6,6 +6,7 @@ import {
   Flex,
   Group,
   Image,
+  Paper,
   Stack,
   Text,
 } from "@mantine/core";
@@ -13,14 +14,14 @@ import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Bulletin, Section, useBulletin } from "../hooks/useBulletin";
-import { useEffect, useRef, useState } from "react";
-import { IconPencil, IconPlus } from "@tabler/icons-react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { IconPencil, IconPlus, IconStar } from "@tabler/icons-react";
 import { useGithub } from "../hooks/useGithub";
 import { useAuth } from "../contexts/AuthProvider";
 import Link from "next/link";
 import { NAVBAR_HEIGHT } from "../components/styles";
 import { NotFound } from "../components/NotFound";
-import { newBulletin, newSection } from "../components/helpers";
+import { languageColors, newBulletin, newSection } from "../components/helpers";
 import {
   PublicContribution,
   usePublicContributions,
@@ -41,6 +42,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useQueryClient } from "react-query";
 import { SortableRepo } from "../components/SortableRepo";
+import { RepoForkedIcon } from "@primer/octicons-react";
 
 const User: NextPage = () => {
   const { account, isFetched: accountIsFetched } = useAuth();
@@ -72,7 +74,7 @@ const User: NextPage = () => {
     useBulletin({
       id: githubData?.id,
       setNotFound,
-      setBulletinClientData: setBulletinClientData,
+      setBulletinClientData,
       enabled:
         githubIsFetched && publicContributionsFetched && notFound !== true,
     });
@@ -387,6 +389,136 @@ const User: NextPage = () => {
             </DndContext>
           </Container>
         )}
+        {!isValidEditMode &&
+          bulletinIsFetched &&
+          bulletinServerData !== null && (
+            <Container>
+              {bulletinClientData?.sections.map((section) => {
+                const queryClient = useQueryClient();
+                const publicContributionsCachedData = queryClient.getQueryData([
+                  "contributions",
+                  user?.toLowerCase(),
+                ]) as PublicContribution[];
+
+                return (
+                  <Fragment key={section.id}>
+                    <Text
+                      color="white"
+                      sx={{
+                        fontSize: "2rem",
+                        height: "50px",
+                        padding: "1rem",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      {section.name}
+                    </Text>
+                    <Flex wrap={"wrap"} justify={"space-between"}>
+                      {section.repos.map((repo) => {
+                        const contributionIndex =
+                          publicContributionsCachedData.findIndex(
+                            (contribution) => contribution.id === repo.repoID
+                          );
+                        const contribution =
+                          publicContributionsCachedData[contributionIndex];
+
+                        return (
+                          <Paper
+                            sx={(theme) => ({
+                              width: "100%",
+                              background: theme.colors.github[9],
+                              "@media (min-width: 45em)": {
+                                width: "49%",
+                              },
+                              border: "#30363d 1px solid",
+                              borderRadius: "6px",
+                              padding: theme.spacing.md,
+                              marginTop: theme.spacing.md,
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "space-between",
+                              touchAction: "none",
+                            })}
+                          >
+                            <Flex direction={"column"}>
+                              <Flex align={"center"}>
+                                <Text
+                                  color="#2F81F7"
+                                  size="16px"
+                                  weight={"bold"}
+                                >
+                                  {contribution.name}
+                                </Text>
+                              </Flex>
+                              <Text
+                                color="#7d8590"
+                                size="14px"
+                                sx={{ marginBottom: "16px" }}
+                              >
+                                {contribution.description}
+                              </Text>
+                            </Flex>
+
+                            <Flex>
+                              {repo.id !== null && (
+                                <Text
+                                  color="#7d8590"
+                                  size="12px"
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                  }}
+                                  mr="16px"
+                                >
+                                  <Box
+                                    w={12}
+                                    h={12}
+                                    sx={{
+                                      background:
+                                        languageColors[
+                                          contribution.language as keyof typeof languageColors
+                                        ].color ?? "initial",
+                                      border:
+                                        "1px solid rgba(255, 255, 255, 0.2)",
+                                      borderRadius: 9999,
+                                      display: "inline-block",
+                                    }}
+                                    mr="4px"
+                                  />
+                                  {contribution.language}
+                                </Text>
+                              )}
+                              {contribution.stargazers_count > 0 && (
+                                <Text
+                                  color="#7d8590"
+                                  size="12px"
+                                  mr="16px"
+                                  sx={{ display: "flex", alignItems: "center" }}
+                                >
+                                  <IconStar size={16} />
+                                  {contribution.stargazers_count}
+                                </Text>
+                              )}
+                              {contribution.forks_count > 0 && (
+                                <Text
+                                  color="#7d8590"
+                                  size="12px"
+                                  sx={{ display: "flex", alignItems: "center" }}
+                                >
+                                  <RepoForkedIcon size={15} fill="#7d8590" />
+                                  {contribution.forks_count}
+                                </Text>
+                              )}
+                            </Flex>
+                          </Paper>
+                        );
+                      })}
+                    </Flex>
+                  </Fragment>
+                );
+              })}
+            </Container>
+          )}
       </Box>
     </>
   );

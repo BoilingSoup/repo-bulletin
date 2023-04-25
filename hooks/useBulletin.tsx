@@ -28,13 +28,6 @@ export const useBulletin = ({
         return;
       }
 
-      // const isMyAccount = user?.toLowerCase() === account?.name.toLowerCase();
-
-      // if (!isMyAccount) {
-      //   setNotFound(false);
-      //   return;
-      // }
-
       if (data === null) {
         setBulletinClientData(newBulletin());
         setNotFound(false);

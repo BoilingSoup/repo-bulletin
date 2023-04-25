@@ -68,6 +68,10 @@ type UserData struct {
 	AccessToken string `json:"access_token"`
 }
 
+type BulletinData struct {
+	Data Payload `json:"data"`
+}
+
 func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	id, err := getUser(request)
 	if err != nil {
@@ -209,12 +213,23 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 			}
 		}
 	}
-	//
-	// if pass,
-	//   connect to database and insert/update record.
-	// respond with success.
 
-	// check userid
+	row = conn.QueryRow(context.Background(), `SELECT data FROM bulletins WHERE user_id = $1;`, dst.ID)
+	bd := BulletinData{}
+	err = row.Scan(&bd.Data)
+	if err != pgx.ErrNoRows && err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Error reading data from DB.")
+	}
+	if err == pgx.ErrNoRows {
+		_, err = conn.Exec(context.Background(), `INSERT INTO bulletins (user_id, data) VALUES ($1, $2);`, dst.ID, data)
+		if err != nil {
+			return jsonErrorResponse(http.StatusInternalServerError, "Error creating bulletin in DB.")
+		}
+	}
+	if err == nil {
+		_, err = conn.Exec(context.Background(), `UPDATE bulletins SET data = $1 WHERE user_id = $2`, data, dst.ID)
+	}
+
 	return &events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Headers: map[string]string{

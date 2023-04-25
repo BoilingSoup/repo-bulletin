@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -97,11 +98,17 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 		}, nil
 	}
 
+	b, err := json.Marshal(bd.Data)
+	if err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Error marshaling JSON.")
+	}
+	fmt.Printf("%s\n", b)
+
 	return &events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 		},
-		Body: fmt.Sprintf(`{"data": "%v"}`, bd.Data),
+		Body: fmt.Sprintf(`%s`, b),
 	}, nil
 }

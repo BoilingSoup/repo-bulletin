@@ -20,7 +20,6 @@ import { ChangeEventHandler, Fragment, RefCallback, useState } from "react";
 import { Updater } from "use-immer";
 import { useQueryClient } from "react-query";
 import { SortableRepo } from "./SortableRepo";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useConfirmedDeleteStatus } from "../contexts/HasConfirmedProvider";
 import {
   SortableContext,
