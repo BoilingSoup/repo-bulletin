@@ -52,7 +52,7 @@ const User: NextPage = () => {
   const [bulletinClientData, setBulletinClientData] = useImmer<
     Exclude<Bulletin, null> | undefined
   >(undefined);
-  console.log(bulletinClientData);
+  // console.log(bulletinClientData);
 
   // get avatar & id from github
   const { data: githubData, isFetched: githubIsFetched } = useGithub({
@@ -135,7 +135,11 @@ const User: NextPage = () => {
   };
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
-    if (over === null) {
+
+    if (
+      over === null ||
+      active.data.current?.type !== over.data.current?.type
+    ) {
       return;
     }
 
@@ -153,7 +157,7 @@ const User: NextPage = () => {
     });
   };
   const handleDragEnd = (event: DragEndEvent) => {
-    // setDragActiveID(null);
+    setDragActiveItem(null);
   };
 
   return (
