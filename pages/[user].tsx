@@ -52,7 +52,7 @@ const User: NextPage = () => {
   const [bulletinClientData, setBulletinClientData] = useImmer<
     Exclude<Bulletin, null> | undefined
   >(undefined);
-  // console.log(bulletinClientData);
+  console.log(bulletinClientData);
 
   // get avatar & id from github
   const { data: githubData, isFetched: githubIsFetched } = useGithub({
@@ -126,7 +126,7 @@ const User: NextPage = () => {
       ]) as PublicContribution[];
 
       const contributionObjIndex = contributions.findIndex(
-        (contribution) => contribution.id === event.active.id
+        (contribution) => contribution.id === event.active.data.current?.repoID
       );
       const contribution = contributions[contributionObjIndex];
       setDragActiveItem(contribution);
@@ -135,26 +135,62 @@ const User: NextPage = () => {
   };
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
+    const activeDraggableType = active.data.current?.type as "SECTION" | "REPO";
+    const overDraggableType = over?.data.current?.type as "SECTION" | "REPO";
+
+    if (over === null || activeDraggableType !== overDraggableType) {
+      return;
+    }
 
     if (
-      over === null ||
-      active.data.current?.type !== over.data.current?.type
+      activeDraggableType === "REPO" &&
+      active.data.current?.sectionID !== over.data.current?.sectionID
     ) {
       return;
     }
 
-    setBulletinClientData((prev) => {
-      if (prev === undefined) {
-        return prev;
-      }
-      const activeSectionIndex = prev.sections.findIndex(
-        (section) => section.id === active.id
-      );
-      const overIndex = prev.sections.findIndex(
-        (section) => section.id === over.id
-      );
-      prev.sections = arraySwap(prev.sections, activeSectionIndex, overIndex);
-    });
+    const isSectionOnSection = activeDraggableType === "SECTION";
+    if (isSectionOnSection) {
+      setBulletinClientData((prev) => {
+        if (prev === undefined) {
+          return prev;
+        }
+        const activeSectionIndex = prev.sections.findIndex(
+          (section) => section.id === active.id
+        );
+        const overIndex = prev.sections.findIndex(
+          (section) => section.id === over.id
+        );
+        prev.sections = arraySwap(prev.sections, activeSectionIndex, overIndex);
+      });
+      return;
+    }
+
+    const isRepoOnRepo = activeDraggableType === "REPO";
+    if (isRepoOnRepo) {
+      setBulletinClientData((prev) => {
+        if (prev === undefined) {
+          return prev;
+        }
+        const dragOverSectionIndex = prev.sections.findIndex(
+          (section) => section.id === active.data.current?.sectionID
+        );
+        const dragOverSection = prev.sections[dragOverSectionIndex];
+        const activeItemIndex = dragOverSection.repos.findIndex(
+          (repo) => repo.id === active.id
+        );
+        const overItemIndex = dragOverSection.repos.findIndex(
+          (repo) => repo.id === over.id
+        );
+
+        dragOverSection.repos = arraySwap(
+          dragOverSection.repos,
+          activeItemIndex,
+          overItemIndex
+        );
+      });
+      return;
+    }
   };
   const handleDragEnd = (event: DragEndEvent) => {
     setDragActiveItem(null);

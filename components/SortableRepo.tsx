@@ -5,15 +5,20 @@ import { PublicContribution } from "../hooks/usePublicContributions";
 import { languageColors } from "./helpers";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Section } from "../hooks/useBulletin";
 
 type Props = {
   contribution: PublicContribution;
   onRemove: (id: number) => void;
+  repo?: { id: string; repoID: number };
+  section?: Section;
 };
 
 export const SortableRepo = ({
   contribution,
   onRemove: handleRepoRemove,
+  repo,
+  section,
 }: Props) => {
   const {
     attributes,
@@ -22,7 +27,10 @@ export const SortableRepo = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: contribution.id, data: { type: "REPO" } });
+  } = useSortable({
+    id: repo?.id ?? "overlay",
+    data: { type: "REPO", repoID: repo?.repoID, sectionID: section?.id },
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),

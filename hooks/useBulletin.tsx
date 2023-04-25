@@ -57,7 +57,7 @@ export const useBulletin = ({
 export type Section = {
   id: string;
   name: string;
-  repos: number[];
+  repos: { id: string; repoID: number }[];
 };
 
 export type Bulletin = {

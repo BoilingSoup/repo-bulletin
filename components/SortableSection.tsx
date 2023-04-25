@@ -22,8 +22,13 @@ import { useQueryClient } from "react-query";
 import { SortableRepo } from "./SortableRepo";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useConfirmedDeleteStatus } from "../contexts/HasConfirmedProvider";
-import { SortableContext, useSortable } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { nanoid } from "nanoid";
 
 type Props = {
   section: Section;
@@ -44,10 +49,10 @@ export const SortableSection = ({
 
   const handleListItemOnClick = (contributionID: number) => () => {
     setCheckedRepos((prev) => {
-      if (prev.includes(contributionID)) {
-        return prev.filter((repoID) => repoID !== contributionID);
+      if (prev.map((el) => el.repoID).includes(contributionID)) {
+        return prev.filter((repo) => repo.repoID !== contributionID);
       }
-      return [...prev, contributionID];
+      return [...prev, { id: nanoid(), repoID: contributionID }];
     });
   };
 
@@ -88,13 +93,13 @@ export const SortableSection = ({
       }
       const currSection = prev.sections[currSectionIndex];
       const repoIDIndex = currSection.repos.findIndex(
-        (repoID) => repoID === contributionID
+        (repo) => repo.repoID === contributionID
       );
       currSection.repos.splice(repoIDIndex, 1);
     });
 
     setCheckedRepos((prev) =>
-      prev.filter((repoID) => repoID !== contributionID)
+      prev.filter((repo) => repo.repoID !== contributionID)
     );
   };
 
@@ -217,7 +222,9 @@ export const SortableSection = ({
                     >
                       <Checkbox
                         mr="lg"
-                        checked={checkedRepos.includes(contribution.id)}
+                        checked={checkedRepos
+                          .map((el) => el.repoID)
+                          .includes(contribution.id)}
                         readOnly
                       />
                       <Text color="dark.1">{contribution.name}</Text>
@@ -388,17 +395,19 @@ export const SortableSection = ({
           </Center>
         )}
 
-        <SortableContext items={section.repos}>
+        <SortableContext items={section.repos} strategy={rectSortingStrategy}>
           <Flex wrap={"wrap"} justify={"space-between"} ref={parent}>
-            {section.repos.map((repoID) => {
+            {section.repos.map((repo) => {
               const contributionIndex = publicContributionsCachedData.findIndex(
-                (contribution) => contribution.id === repoID
+                (contribution) => contribution.id === repo.repoID
               );
               const contribution =
                 publicContributionsCachedData[contributionIndex];
               return (
                 <SortableRepo
-                  key={repoID}
+                  key={repo.id}
+                  repo={repo}
+                  section={section}
                   contribution={contribution}
                   onRemove={handleRemoveRepo}
                 />
