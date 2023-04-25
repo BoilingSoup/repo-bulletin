@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -11,6 +14,7 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/golang-jwt/jwt"
+	"github.com/jackc/pgx/v5"
 )
 
 func main() {
@@ -27,14 +31,188 @@ func jsonErrorResponse(code int, message string) (*events.APIGatewayProxyRespons
 	}, nil
 }
 
+type Repo struct {
+	Id     string `json:"id"`
+	RepoID int    `json:"repoID"`
+}
+
+type Section struct {
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	Repos []Repo `json:"repos"`
+}
+
+type Payload struct {
+	Sections []Section `json:"sections"`
+}
+
+/*
+	{
+	  sections: [
+	    {
+	      id: nanoid(),
+	      name: "my title blahblahblah",
+	      repos: [
+	        {
+	          id: nanoid(),
+	          repoID: number
+	        }
+	      ]
+	    }
+	  ]
+	}
+*/
+
+type UserData struct {
+	ID          int    `json:"id"`
+	AccessToken string `json:"access_token"`
+}
+
 func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	// check authentication status
 	id, err := getUser(request)
 	if err != nil {
 		return jsonErrorResponse(http.StatusUnauthorized, "Unauthenticated")
 	}
 
-	fmt.Printf("%+v\n", request.Body)
+	payload, ok := request.QueryStringParameters["x"]
+	if !ok {
+		return jsonErrorResponse(http.StatusBadRequest, "No data provided.")
+	}
+
+	payload, err = url.QueryUnescape(payload)
+	if err != nil {
+		return jsonErrorResponse(http.StatusBadRequest, "Bad payload.")
+	}
+
+	var data Payload
+	json.Unmarshal([]byte(payload), &data)
+	fmt.Printf("Struct Form:\n%+v\n", data)
+
+	if len(data.Sections) == 0 {
+		return jsonErrorResponse(http.StatusBadRequest, "Bad payload: No Sections")
+	}
+
+	var sectionIDs = map[string]int{}
+	var repoUUIDs = map[string]int{}
+	for _, v := range data.Sections {
+
+		if strings.Trim(v.Name, " ") == "" {
+			return jsonErrorResponse(http.StatusBadRequest, "Bad payload: Empty Section Name")
+		}
+
+		sectionIDs[v.Id]++
+		if sectionIDs[v.Id] != 1 {
+			return jsonErrorResponse(http.StatusBadRequest, "Bad payload: Duplicate Section IDs")
+		}
+
+		if len(v.Repos) < 1 {
+			return jsonErrorResponse(http.StatusBadRequest, "Bad payload: Section without Repos")
+		}
+
+		var repoIDs = map[int]int{}
+		for _, repo := range v.Repos {
+
+			repoUUIDs[repo.Id]++
+			repoIDs[repo.RepoID]++
+
+			if repo.RepoID == 0 {
+				return jsonErrorResponse(http.StatusBadRequest, "Bad payload: All Repos must have a repoID")
+			}
+			if repoUUIDs[repo.Id] != 1 {
+				return jsonErrorResponse(http.StatusBadRequest, "Bad payload: Duplicate Repo UUIDs")
+			}
+			if repoIDs[repo.RepoID] != 1 {
+				return jsonErrorResponse(http.StatusBadRequest, "Bad payload: A section can not have duplicate Repo IDs")
+			}
+		}
+	}
+
+	config, err := pgx.ParseConfig(os.Getenv("COCKROACHDB_URL"))
+	if err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to create DB config.")
+	}
+
+	conn, err := pgx.ConnectConfig(context.Background(), config)
+	if err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to connect to DB.")
+	}
+	defer conn.Close(context.Background())
+
+	row := conn.QueryRow(context.Background(), `SELECT id, access_token FROM users WHERE id = $1;`, id)
+	dst := UserData{}
+	err = row.Scan(&dst.ID, &dst.AccessToken)
+	if err != pgx.ErrNoRows && err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Error reading user from DB.")
+	}
+	if err == pgx.ErrNoRows {
+		return jsonErrorResponse(http.StatusInternalServerError, "User does not exist in DB.")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, "https://api.github.com/user", nil)
+	if err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to construct a request.")
+	}
+	req.Header.Set("Authorization", "Bearer "+dst.AccessToken)
+	req.Header.Set("Accept", "application/vnd.github+json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to request user data.")
+	}
+	defer resp.Body.Close()
+
+	var (
+		userData struct {
+			Login string `json:"login"`
+		}
+	)
+	err = json.NewDecoder(resp.Body).Decode(&userData)
+	if err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to decode user data.")
+	}
+
+	url := "https://api.github.com/users/" + userData.Login + "/repos"
+	req, err = http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to construct a request.")
+	}
+	req.Header.Set("Authorization", "Bearer "+dst.AccessToken)
+	req.Header.Set("Accept", "application/vnd.github+json")
+
+	client = &http.Client{}
+	resp, err = client.Do(req)
+	if err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to request user data.")
+	}
+	defer resp.Body.Close()
+
+	var (
+		userRepos []struct {
+			ID int `json:"id"`
+		}
+	)
+	err = json.NewDecoder(resp.Body).Decode(&userRepos)
+	if err != nil {
+		return jsonErrorResponse(http.StatusInternalServerError, "Failed to decode user data.")
+	}
+
+	validRepoIDs := make(map[int]bool, len(userRepos))
+	for _, v := range userRepos {
+		validRepoIDs[v.ID] = true
+	}
+
+	for _, v := range data.Sections {
+		for _, r := range v.Repos {
+			if _, ok := validRepoIDs[r.RepoID]; !ok {
+				return jsonErrorResponse(http.StatusUnprocessableEntity, "Unauthorized repos in payload.")
+			}
+		}
+	}
+	//
+	// if pass,
+	//   connect to database and insert/update record.
+	// respond with success.
 
 	// check userid
 	return &events.APIGatewayProxyResponse{
@@ -42,7 +220,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 		Headers: map[string]string{
 			"Content-Type": "application/json",
 		},
-		Body: fmt.Sprintf(`{"your id": %d, "body": "%s"}`, id, request.Body),
+		Body: fmt.Sprintf(`{"your id": %d, "body": %+v}`, id, data),
 	}, nil
 }
 
