@@ -45,6 +45,7 @@ export const SortableRepo = ({
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
+        touchAction: "none",
       })}
       ref={setNodeRef}
       style={style}

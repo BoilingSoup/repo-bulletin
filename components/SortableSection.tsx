@@ -267,6 +267,7 @@ export const SortableSection = ({
           paddingTop: 0,
           borderRadius: theme.radius.lg,
           position: "relative",
+          touchAction: "none",
         })}
         mb="30px"
         ref={setNodeRef}
