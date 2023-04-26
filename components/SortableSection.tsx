@@ -172,13 +172,22 @@ export const SortableSection = ({
             background: theme.colors.github[7],
             color: "white",
             ":hover": { background: theme.colors.github[6] },
+            zIndex: 999999999999,
           },
-          header: { background: theme.colors.github[7], color: "white" },
-          content: { background: theme.colors.github[7] },
+          header: {
+            background: theme.colors.github[7],
+            color: "white",
+            zIndex: 999999999999,
+          },
+          content: { background: theme.colors.github[7], zIndex: 999999999999 },
           body: {
             paddingLeft: 0,
             paddingBottom: 0,
             paddingRight: 0,
+            zIndex: 999999999999,
+          },
+          root: {
+            zIndex: 999999999999,
           },
         }}
       >
@@ -198,7 +207,13 @@ export const SortableSection = ({
             setSearchInput(event.target.value);
           }}
         />
-        <Box h="400px" sx={{ overflow: "auto" }}>
+        <Box
+          h="400px"
+          sx={{
+            overflow: "auto",
+            "@media (max-width: 660px)": { height: "300px" },
+          }}
+        >
           <Flex direction="column">
             {contributions?.map((contribution) => {
               if (
@@ -275,13 +290,17 @@ export const SortableSection = ({
           paddingTop: 0,
           borderRadius: theme.radius.lg,
           position: "relative",
-          touchAction: "none",
         })}
         mb="30px"
         ref={setNodeRef}
         style={style}
       >
-        <Center {...attributes} {...listeners} h={50} sx={{ cursor: "grab" }}>
+        <Center
+          {...attributes}
+          {...listeners}
+          h={50}
+          sx={{ cursor: "grab", touchAction: "none" }}
+        >
           <GrabberIcon fill="white" size={30} />{" "}
           <Text color="dark.0">Drag & Move</Text>
         </Center>
@@ -296,7 +315,7 @@ export const SortableSection = ({
               position: "absolute",
               left: 0,
               top: 0,
-              zIndex: 999,
+              zIndex: 9999999999999,
               flexDirection: "column",
             })}
           >
@@ -317,30 +336,32 @@ export const SortableSection = ({
             </Flex>
           </Center>
         )}
-        <Center
-          pos="absolute"
-          right={-15}
-          top={-15}
-          sx={(theme) => ({
-            background: theme.colors.github[3],
-            width: "30px",
-            height: "30px",
-            borderRadius: "999999px",
-            zIndex: 1000,
-          })}
-        >
-          <ActionIcon
+        {!opened && (
+          <Center
+            pos="absolute"
+            right={-15}
+            top={-15}
             sx={(theme) => ({
-              color: "white",
+              background: theme.colors.github[3],
+              width: "30px",
+              height: "30px",
               borderRadius: "999999px",
-              ":hover": { background: theme.colors.github[4] },
+              zIndex: 1000,
             })}
-            size={30}
-            onClick={handleRemoveSection}
           >
-            <IconX />
-          </ActionIcon>
-        </Center>
+            <ActionIcon
+              sx={(theme) => ({
+                color: "white",
+                borderRadius: "999999px",
+                ":hover": { background: theme.colors.github[4] },
+              })}
+              size={30}
+              onClick={handleRemoveSection}
+            >
+              <IconX />
+            </ActionIcon>
+          </Center>
+        )}
         <TextInput
           value={section.name}
           onChange={handleChangeSectionName}

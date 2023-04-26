@@ -55,7 +55,6 @@ export const SortableRepo = ({
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        touchAction: "none",
       })}
       ref={setNodeRef}
       style={style}
@@ -72,7 +71,12 @@ export const SortableRepo = ({
           >
             {contribution.name}
           </Text>
-          <Box {...attributes} {...listeners} ml="auto" sx={{ cursor: "grab" }}>
+          <Box
+            {...attributes}
+            {...listeners}
+            ml="auto"
+            sx={{ cursor: "grab", touchAction: "none" }}
+          >
             <GrabberIcon size={16} fill="#7d8590" />
           </Box>
         </Flex>

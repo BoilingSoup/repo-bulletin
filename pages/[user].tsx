@@ -572,7 +572,6 @@ const User: NextPage = () => {
                               display: "flex",
                               flexDirection: "column",
                               justifyContent: "space-between",
-                              touchAction: "none",
                             })}
                             key={repo.id}
                           >

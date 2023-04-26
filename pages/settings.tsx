@@ -33,7 +33,7 @@ const Settings: NextPage = () => {
       )}
       {!isLoading && (
         <Stack>
-          <Text color="white" size="3rem">
+          <Text color="white" size="3rem" align="center">
             Delete your account?
           </Text>
           <Group>
