@@ -66,7 +66,11 @@ const User: NextPage = () => {
   >(undefined);
 
   // get avatar & id from github
-  const { data: githubData, isFetched: githubIsFetched } = useGithub({
+  const {
+    data: githubData,
+    isFetched: githubIsFetched,
+    isSuccess: githubFetchWasSuccess,
+  } = useGithub({
     user: user as string | undefined,
     setNotFound,
     enabled: user !== undefined,
@@ -238,7 +242,9 @@ const User: NextPage = () => {
         pb={NAVBAR_HEIGHT}
       >
         {(isSaving ||
-          (bulletinServerData === undefined && !bulletinIsFetched)) && (
+          (githubFetchWasSuccess &&
+            bulletinServerData === undefined &&
+            !bulletinIsFetched)) && (
           <Center
             pos="absolute"
             w="100%"
