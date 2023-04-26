@@ -16,7 +16,14 @@ import { useRouter } from "next/router";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Bulletin, Section, useBulletin } from "../hooks/useBulletin";
 import { Fragment, useEffect, useRef, useState } from "react";
-import { IconPencil, IconPlus, IconStar } from "@tabler/icons-react";
+import {
+  IconDeviceFloppy,
+  IconPencil,
+  IconPlus,
+  IconSquareLetterX,
+  IconSquareRoundedMinus,
+  IconStar,
+} from "@tabler/icons-react";
 import { useGithub } from "../hooks/useGithub";
 import { useAuth } from "../contexts/AuthProvider";
 import Link from "next/link";
@@ -45,6 +52,7 @@ import { useQueryClient } from "react-query";
 import { SortableRepo } from "../components/SortableRepo";
 import { RepoForkedIcon } from "@primer/octicons-react";
 import { useSaveMutation } from "../hooks/useSaveMutation";
+import { useViewportSize } from "@mantine/hooks";
 
 const User: NextPage = () => {
   const { account, isFetched: accountIsFetched } = useAuth();
@@ -215,6 +223,8 @@ const User: NextPage = () => {
     }
   }, [bulletinServerData]);
 
+  const { width } = useViewportSize();
+
   return (
     <>
       <Box
@@ -311,21 +321,44 @@ const User: NextPage = () => {
                       background: theme.colors.dark[8],
                       color: theme.colors.dark[4],
                     },
+                    "@media (max-width:660px)": {
+                      width: 140,
+                      fontSize: "0.7rem",
+                    },
+                    "@media (max-width: 585px)": {
+                      width: "auto",
+                    },
                   })}
                 >
                   <Flex mr="3px" align="center">
                     <IconPlus />
                   </Flex>
-                  Add Section
+                  {width > 585 && "Add Section"}
                 </Button>
               </Flex>
               {warningText !== "" && (
-                <Text my="xl" color="yellow.2" span>
+                <Text
+                  my="xl"
+                  color="yellow.2"
+                  span
+                  sx={{
+                    fontSize: "clamp(0.6rem, 6vw, 1rem)",
+                    "@media (max-width: 660px)": { fontSize: "0.75rem" },
+                    "@media (max-width: 410px)": { fontSize: "0.5rem" },
+                  }}
+                >
                   {warningText}
                 </Text>
               )}
 
-              <Group my="md">
+              <Group
+                my="md"
+                sx={{
+                  "@media (max-width: 585px)": {
+                    gap: 1,
+                  },
+                }}
+              >
                 <Button
                   w="90px"
                   variant="gradient"
@@ -339,12 +372,24 @@ const User: NextPage = () => {
                       background: theme.colors.dark[8],
                       color: theme.colors.dark[4],
                     },
+                    "@media (max-width:660px)": {
+                      width: 80,
+                      fontSize: "0.7rem",
+                    },
+                    "@media (max-width: 585px)": {
+                      width: "auto",
+                    },
                   })}
                   onClick={() =>
                     saveBulletin(bulletinClientData as Exclude<Bulletin, null>)
                   }
                 >
-                  Save All
+                  {width > 560 && "Save All"}
+                  {width > 420 && width <= 560 && (
+                    <IconDeviceFloppy size={20} />
+                  )}
+
+                  {width <= 420 && <IconDeviceFloppy size={14} />}
                 </Button>
                 <Button
                   w="90px"
@@ -355,13 +400,24 @@ const User: NextPage = () => {
                       background: theme.colors.dark[8],
                       color: theme.colors.dark[4],
                     },
+                    "@media (max-width:660px)": {
+                      width: 80,
+                      fontSize: "0.7rem",
+                    },
+                    "@media (max-width: 585px)": {
+                      width: "auto",
+                    },
                   })}
                   onClick={() => {
                     setBulletinClientData(bulletinServerData!);
                     router.push(`/${user}`);
                   }}
                 >
-                  Cancel
+                  {width > 560 && "Cancel"}
+                  {width > 420 && width <= 560 && (
+                    <IconSquareLetterX size={20} />
+                  )}
+                  {width <= 420 && <IconSquareLetterX size={14} />}
                 </Button>
               </Group>
             </Flex>

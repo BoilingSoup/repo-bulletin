@@ -58,6 +58,11 @@ export const Navbar = () => {
             color="white"
             component="a"
             href="/.netlify/functions/redirect"
+            sx={{
+              "@media (max-width:350px)": {
+                fontSize: "0.75rem",
+              },
+            }}
           >
             Login with GitHub
           </Text>
