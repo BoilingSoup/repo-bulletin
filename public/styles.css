@@ -3,6 +3,7 @@
 * {
   scrollbar-width: auto;
   scrollbar-color: #3e4756 #050709;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Chrome, Edge, and Safari */
