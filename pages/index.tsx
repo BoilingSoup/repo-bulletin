@@ -33,9 +33,6 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <Head>
-        <title>Repobullet.in</title>
-      </Head>
       <Center
         sx={(theme) => ({
           width: "100vw",
