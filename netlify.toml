@@ -4,3 +4,9 @@ package = "@netlify/plugin-nextjs"
 [build]
 command = "npm run build"
 publish = ".next"
+
+[[redirects]]
+  from = "https://repobulletin.netlify.app/*"
+  to = "https://repobullet.in/:splat"
+  status = 301
+  force = true

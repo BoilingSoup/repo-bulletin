@@ -1,4 +1,4 @@
-import { MantineProvider } from "@mantine/core";
+import { MantineProvider, createEmotionCache } from "@mantine/core";
 import type { AppProps } from "next/app";
 import { AuthProvider } from "../contexts/AuthProvider";
 import { QueryClient, QueryClientProvider } from "react-query";
@@ -18,12 +18,15 @@ const queryClient = new QueryClient({
   },
 });
 
+export const cssCache = createEmotionCache({ key: "mantine" });
+
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <MantineProvider
         withGlobalStyles
         withNormalizeCSS
+        emotionCache={cssCache}
         theme={{
           colors: {
             github: [

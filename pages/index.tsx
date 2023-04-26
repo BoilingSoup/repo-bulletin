@@ -34,7 +34,7 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>test</title>
+        <title>Repobullet.in</title>
       </Head>
       <Center
         sx={(theme) => ({
@@ -53,18 +53,30 @@ const Home: NextPage = () => {
             plugins={[autoplay.current]}
           >
             <Carousel.Slide>
-              <Text color="dark.1" size="4rem" align="center">
-                Organize your public repos.
+              <Text
+                color="dark.1"
+                align="center"
+                sx={{ fontSize: "clamp(3rem, 10vw, 4rem)" }}
+              >
+                Organize your public repos
               </Text>
             </Carousel.Slide>
             <Carousel.Slide>
-              <Text color="dark.1" size="4rem" align="center">
-                Show off your contributions.
+              <Text
+                color="dark.1"
+                sx={{ fontSize: "clamp(3rem, 10vw, 4rem)" }}
+                align="center"
+              >
+                Show off your contributions
               </Text>
             </Carousel.Slide>
             <Carousel.Slide>
-              <Text color="dark.1" size="4rem" align="center">
-                Build your own page in seconds.
+              <Text
+                color="dark.1"
+                sx={{ fontSize: "clamp(3rem, 10vw, 4rem)" }}
+                align="center"
+              >
+                Build your own page in seconds
               </Text>
             </Carousel.Slide>
           </Carousel>
@@ -103,10 +115,14 @@ const Home: NextPage = () => {
           {!account && !isLoading && !redirecting && (
             <Button
               h="60px"
-              w="300px"
+              // w="300px"
               my="60px"
               mx="auto"
               size="lg"
+              sx={{
+                width: "clamp(220px, 10vw, 300px)",
+                fontSize: "clamp(0.5rem, 10vw, 1rem)",
+              }}
               leftIcon={<IconBrandGithub />}
               variant="gradient"
               component="a"
@@ -123,7 +139,10 @@ const Home: NextPage = () => {
           )}
         </Stack>
         <Center pos="absolute" bottom={20}>
-          <Flex align={"center"}>
+          <Flex
+            align={"center"}
+            sx={{ fontSize: "clamp(0.5rem, 10vw, 1.2rem)" }}
+          >
             <Text color="dark.3">Repobullet.in - by BoilingSoup</Text>
             <Tooltip label="https://github.com/BoilingSoup">
               <ActionIcon
