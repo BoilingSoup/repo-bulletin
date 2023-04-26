@@ -62,7 +62,14 @@ export const SortableRepo = ({
     >
       <Flex direction={"column"}>
         <Flex align={"center"}>
-          <Text color="#2F81F7" size="16px" weight={"bold"}>
+          <Text
+            color="#2F81F7"
+            size="16px"
+            weight={"bold"}
+            component="a"
+            target="_blank"
+            href={contribution.html_url}
+          >
             {contribution.name}
           </Text>
           <Box {...attributes} {...listeners} ml="auto" sx={{ cursor: "grab" }}>

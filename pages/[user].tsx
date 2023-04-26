@@ -6,6 +6,7 @@ import {
   Flex,
   Group,
   Image,
+  Loader,
   Paper,
   Stack,
   Text,
@@ -14,7 +15,7 @@ import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Bulletin, Section, useBulletin } from "../hooks/useBulletin";
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { IconPencil, IconPlus, IconStar } from "@tabler/icons-react";
 import { useGithub } from "../hooks/useGithub";
 import { useAuth } from "../contexts/AuthProvider";
@@ -43,6 +44,7 @@ import {
 import { useQueryClient } from "react-query";
 import { SortableRepo } from "../components/SortableRepo";
 import { RepoForkedIcon } from "@primer/octicons-react";
+import { useSaveMutation } from "../hooks/useSaveMutation";
 
 const User: NextPage = () => {
   const { account, isFetched: accountIsFetched } = useAuth();
@@ -196,12 +198,23 @@ const User: NextPage = () => {
       return;
     }
   };
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = () => {
     enableReposAutoAnimate(true);
     setDragActiveItem(null);
   };
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const { mutate: saveBulletin, isLoading: isSaving } = useSaveMutation({
+    id: githubData?.id,
+    setBulletinClientData,
+  });
+
+  useEffect(() => {
+    if (bulletinServerData !== undefined) {
+      setBulletinClientData(bulletinServerData!);
+    }
+  }, [bulletinServerData]);
 
   return (
     <>
@@ -213,7 +226,22 @@ const User: NextPage = () => {
           overflowX: "hidden",
         })}
         pt={NAVBAR_HEIGHT}
+        pb={NAVBAR_HEIGHT}
       >
+        {(isSaving ||
+          (bulletinServerData === undefined && !bulletinIsFetched)) && (
+          <Center
+            pos="absolute"
+            w="100%"
+            h="100%"
+            top={0}
+            left={0}
+            bg={"rgba(0, 0, 0, 0.55)"}
+            sx={{ zIndex: 999999 }}
+          >
+            <Loader />
+          </Center>
+        )}
         {notFound && <NotFound />}
         {accountIsFetched &&
           bulletinServerData === null &&
@@ -278,7 +306,7 @@ const User: NextPage = () => {
                       prev.sections.push(newSection());
                     })
                   }
-                  disabled={atLeastOneSectionHasNoNameOrRepos}
+                  disabled={atLeastOneSectionHasNoNameOrRepos || isSaving}
                   sx={(theme) => ({
                     ":disabled": {
                       background: theme.colors.dark[8],
@@ -302,19 +330,33 @@ const User: NextPage = () => {
                 <Button
                   w="90px"
                   variant="gradient"
-                  disabled={warningText !== ""}
+                  disabled={
+                    warningText !== "" ||
+                    isSaving ||
+                    bulletinClientData?.sections.length === 0
+                  }
                   sx={(theme) => ({
                     ":disabled": {
                       background: theme.colors.dark[8],
                       color: theme.colors.dark[4],
                     },
                   })}
+                  onClick={() =>
+                    saveBulletin(bulletinClientData as Exclude<Bulletin, null>)
+                  }
                 >
                   Save All
                 </Button>
                 <Button
                   w="90px"
                   color="dark.3"
+                  disabled={isSaving}
+                  sx={(theme) => ({
+                    ":disabled": {
+                      background: theme.colors.dark[8],
+                      color: theme.colors.dark[4],
+                    },
+                  })}
                   onClick={() => {
                     setBulletinClientData(bulletinServerData!);
                     router.push(`/${user}`);
@@ -391,7 +433,8 @@ const User: NextPage = () => {
         )}
         {!isValidEditMode &&
           bulletinIsFetched &&
-          bulletinServerData !== null && (
+          bulletinServerData !== null &&
+          bulletinServerData !== undefined && (
             <Container>
               <Center mt={40}>
                 <Image
@@ -410,7 +453,6 @@ const User: NextPage = () => {
                       size="lg"
                       component={Link}
                       href={`/${user}?edit=true`}
-                      onClick={() => setBulletinClientData(newBulletin())}
                       compact
                       pos="absolute"
                       ml="auto"
@@ -471,6 +513,7 @@ const User: NextPage = () => {
                               justifyContent: "space-between",
                               touchAction: "none",
                             })}
+                            key={repo.id}
                           >
                             <Flex direction={"column"}>
                               <Flex align={"center"}>
@@ -478,6 +521,9 @@ const User: NextPage = () => {
                                   color="#2F81F7"
                                   size="16px"
                                   weight={"bold"}
+                                  component="a"
+                                  target="_blank"
+                                  href={contribution.html_url}
                                 >
                                   {contribution.name}
                                 </Text>
@@ -492,7 +538,7 @@ const User: NextPage = () => {
                             </Flex>
 
                             <Flex>
-                              {repo.id !== null && (
+                              {contribution.language !== null && (
                                 <Text
                                   color="#7d8590"
                                   size="12px"
@@ -509,7 +555,7 @@ const User: NextPage = () => {
                                       background:
                                         languageColors[
                                           contribution.language as keyof typeof languageColors
-                                        ].color ?? "initial",
+                                        ]?.color ?? "initial",
                                       border:
                                         "1px solid rgba(255, 255, 255, 0.2)",
                                       borderRadius: 9999,
