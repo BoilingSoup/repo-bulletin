@@ -102,7 +102,6 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	if err != nil {
 		return jsonErrorResponse(http.StatusInternalServerError, "Error marshaling JSON.")
 	}
-	fmt.Printf("%s\n", b)
 
 	return &events.APIGatewayProxyResponse{
 		StatusCode: 200,

@@ -7,12 +7,10 @@ export const useLogoutMutation = () => {
 
   return useMutation(logout, {
     onSuccess: () => {
-      console.log("logged out");
       setAccount(null);
     },
     onError: (err) => {
       // TODO: handle error
-      console.log(err);
     },
   });
 };

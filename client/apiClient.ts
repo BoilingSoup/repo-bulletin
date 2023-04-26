@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const apiClient = axios.create({
-  baseURL: "http://localhost:8888/.netlify/functions/",
+  baseURL: "https://repobullet.in/.netlify/functions/",
   headers: {
     "Content-Type": "application/json",
   },
@@ -9,7 +9,7 @@ export const apiClient = axios.create({
 });
 
 export const githubClient = axios.create({
-  baseURL: "http://api.github.com/",
+  baseURL: "https://api.github.com/",
   headers: {
     Accept: "application/vnd.github+json",
   },

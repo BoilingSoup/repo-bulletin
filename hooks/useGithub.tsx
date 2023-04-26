@@ -16,14 +16,13 @@ export const useGithub = ({
 }: Param) => {
   return useQuery(["github", user?.toLowerCase()], fetchGithub(user), {
     onSuccess: (data) => {
-      console.log(data);
+      //
     },
     onError: (err: AxiosError) => {
       if (err.response?.status === 404) {
         setNotFound(true);
         return;
       }
-      console.log(err);
     },
     enabled: routeUserParamIsDefined,
   });

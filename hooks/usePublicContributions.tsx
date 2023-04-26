@@ -15,7 +15,6 @@ export const usePublicContributions = ({
     fetchPublicContributions(user),
     {
       onSuccess: (data) => {
-        console.log(data);
         //
       },
       onError: () => {

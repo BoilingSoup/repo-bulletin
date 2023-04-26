@@ -56,7 +56,6 @@ const User: NextPage = () => {
   const [bulletinClientData, setBulletinClientData] = useImmer<
     Exclude<Bulletin, null> | undefined
   >(undefined);
-  console.log(bulletinClientData);
 
   // get avatar & id from github
   const { data: githubData, isFetched: githubIsFetched } = useGithub({

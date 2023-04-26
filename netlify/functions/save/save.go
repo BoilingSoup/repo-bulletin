@@ -90,7 +90,6 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 
 	var data Payload
 	json.Unmarshal([]byte(payload), &data)
-	fmt.Printf("Struct Form:\n%+v\n", data)
 
 	if len(data.Sections) == 0 {
 		return jsonErrorResponse(http.StatusBadRequest, "Bad payload: No Sections")

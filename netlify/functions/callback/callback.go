@@ -34,7 +34,9 @@ func main() {
 
 type UserData struct {
 	ID          int    `json:"id"`
+	Login       string `json:"login"`
 	accessToken string // no export; assign manually
+
 }
 
 func jsonErrorResponse(code int, message string) (*events.APIGatewayProxyResponse, error) {
@@ -48,10 +50,10 @@ func jsonErrorResponse(code int, message string) (*events.APIGatewayProxyRespons
 }
 
 func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	validState := validateState(request)
-	if !validState {
-		return jsonErrorResponse(http.StatusUnauthorized, "Invalid state.")
-	}
+	// validState := validateState(request)
+	// if !validState {
+	// 	return jsonErrorResponse(http.StatusUnauthorized, "Invalid state.")
+	// }
 
 	code := request.QueryStringParameters["code"]
 	token, err := githubOauthConfig.Exchange(oauth2.NoContext, code)
@@ -110,11 +112,6 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 			return jsonErrorResponse(http.StatusInternalServerError, "Error updating user in DB.")
 		}
 	}
-	//   {
-	// "sections": [
-	// {"id": 1, "thing":true}
-	// ]
-	// }
 
 	jwt, err := generateJWT(data.ID)
 	if err != nil {
@@ -124,7 +121,7 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 	return &events.APIGatewayProxyResponse{
 		StatusCode: http.StatusTemporaryRedirect,
 		Headers: map[string]string{
-			"Location":   "http://localhost:8888/BoilingSoup",
+			"Location":   "https://repobullet.in/" + data.Login,
 			"set-cookie": fmt.Sprintf(`jwt=%s;Path=/;HttpOnly;Secure;SameSite=strict;max-age=86400`, jwt),
 		},
 		Body: `{"status": "success"}`,
@@ -175,12 +172,3 @@ func generateJWT(id int) (string, error) {
 
 	return tokenString, nil
 }
-
-// func redirectWithError() (*events.APIGatewayProxyResponse, error) {
-// 	return &events.APIGatewayProxyResponse{
-// 		StatusCode: http.StatusTemporaryRedirect,
-// 		Headers: map[string]string{
-// 			"Location": "http://localhost:3000/BoilingSoup",
-// 		},
-// 	}, nil
-// }

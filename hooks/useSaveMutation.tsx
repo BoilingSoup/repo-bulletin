@@ -26,9 +26,7 @@ export const useSaveMutation = ({ id, setBulletinClientData }: Param) => {
 };
 
 const saveBulletin = async (bulletinState: Exclude<Bulletin, null>) => {
-  const url =
-    "http://localhost:8888/.netlify/functions/save?x=" +
-    JSON.stringify(bulletinState);
+  const url = "/save?x=" + JSON.stringify(bulletinState);
   // yes, I'm using a GET request to save.
   // I've never used aws lambda nor Netlify serverless go funcs before, and I can't get the dev server to properly receive request bodies.
   const ret = await apiClient.get(url);
