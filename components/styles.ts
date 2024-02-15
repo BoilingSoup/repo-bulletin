@@ -1,4 +1,5 @@
 import { CSSObject, MantineTheme } from "@mantine/core";
+import { languageColors } from "./helpers";
 
 type PxSize = `${number}px`;
 
@@ -245,6 +246,36 @@ export const repoDescriptionSx = (): CSSObject => ({
   color: "#7d8590",
   fontSize: "14px",
   marginBottom: "16px",
+});
+
+export const repoLanguageSx = (): CSSObject => ({
+  fontSize: "12px",
+  color: "#7d8590",
+  display: "flex",
+  alignItems: "center",
+  marginRight: "16px",
+});
+
+export const repoLanguageColorSx = (language: keyof typeof languageColors) => (): CSSObject => ({
+  background: languageColors[language]?.color ?? "initial",
+  border: "1px solid rgba(255, 255, 255, 0.2)",
+  borderRadius: 9999,
+  display: "inline-block",
+  marginRight: "4px",
+  width: "12px",
+  height: "12px",
+});
+
+export const repoDetailsTextSx = (): CSSObject => ({
+  color: "#7d8590",
+  display: "flex",
+  alignItems: "center",
+  fontSize: "12px",
+});
+
+export const repoStarsTextSx = (): CSSObject => ({
+  ...repoDetailsTextSx(),
+  marginRight: "16px",
 });
 
 export const BREAKPOINT_LG = 585;

@@ -25,7 +25,11 @@ import {
   pageLoaderContainerSx,
   repoCardSx,
   repoDescriptionSx,
+  repoDetailsTextSx,
+  repoLanguageColorSx,
+  repoLanguageSx,
   repoNameSx,
+  repoStarsTextSx,
   saveBtnSx,
   sectionContainerSx,
   sectionNameSx,
@@ -392,44 +396,19 @@ const User: NextPage = () => {
 
                           <Flex>
                             {contribution.language !== null && (
-                              <Text
-                                color="#7d8590"
-                                size="12px"
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                }}
-                                mr="16px"
-                              >
-                                <Box
-                                  w={12}
-                                  h={12}
-                                  sx={{
-                                    background:
-                                      languageColors[contribution.language as keyof typeof languageColors]?.color ??
-                                      "initial",
-                                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                                    borderRadius: 9999,
-                                    display: "inline-block",
-                                  }}
-                                  mr="4px"
-                                />
+                              <Text sx={repoLanguageSx}>
+                                <Box sx={repoLanguageColorSx(contribution.language as keyof typeof languageColors)} />
                                 {contribution.language}
                               </Text>
                             )}
                             {contribution.stargazers_count > 0 && (
-                              <Text
-                                color="#7d8590"
-                                size="12px"
-                                mr="16px"
-                                sx={{ display: "flex", alignItems: "center" }}
-                              >
+                              <Text sx={repoStarsTextSx}>
                                 <IconStar size={16} />
                                 {contribution.stargazers_count}
                               </Text>
                             )}
                             {contribution.forks_count > 0 && (
-                              <Text color="#7d8590" size="12px" sx={{ display: "flex", alignItems: "center" }}>
+                              <Text sx={repoDetailsTextSx}>
                                 <RepoForkedIcon size={15} fill="#7d8590" />
                                 {contribution.forks_count}
                               </Text>
