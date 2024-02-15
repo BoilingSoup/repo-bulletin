@@ -1,29 +1,21 @@
 import type { NextPage } from "next";
-import Head from "next/head";
-import {
-  Center,
-  Text,
-  Button,
-  Stack,
-  Skeleton,
-  CSSObject,
-  MantineTheme,
-  Flex,
-  ActionIcon,
-  Tooltip,
-  Loader,
-} from "@mantine/core";
+import { Center, Text, Button, Stack, Skeleton, Flex, ActionIcon, Tooltip, Loader } from "@mantine/core";
 import { useAuth } from "../contexts/AuthProvider";
 import Link from "next/link";
-import {
-  IconBrandGithub,
-  IconBrandGithubFilled,
-  IconBrandTwitterFilled,
-  IconWorld,
-} from "@tabler/icons-react";
+import { IconBrandGithub, IconBrandGithubFilled, IconBrandTwitterFilled, IconWorld } from "@tabler/icons-react";
 import { Carousel } from "@mantine/carousel";
 import { useRef, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
+import {
+  footerFlexSx,
+  footerIconBtnSx,
+  homeCarouselTextSx,
+  homeCenterSx,
+  homeLoaderContainerSx,
+  homeLoginBtnSx,
+  homeSkeletonSx,
+  homeViewPageBtnSx,
+} from "../components/styles";
 
 const Home: NextPage = () => {
   const { account, isLoading } = useAuth();
@@ -33,56 +25,22 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <Center
-        sx={(theme) => ({
-          width: "100vw",
-          height: "100vh",
-          background: theme.colors.github[9],
-          position: "relative",
-        })}
-      >
+      <Center sx={homeCenterSx}>
         <Stack w="80%" maw={"1200px"}>
-          <Carousel
-            withIndicators={false}
-            withControls={false}
-            slideSize={"100%"}
-            loop
-            plugins={[autoplay.current]}
-          >
+          <Carousel withIndicators={false} withControls={false} slideSize={"100%"} loop plugins={[autoplay.current]}>
             <Carousel.Slide>
-              <Text
-                color="dark.1"
-                align="center"
-                sx={{ fontSize: "clamp(3rem, 10vw, 4rem)" }}
-              >
-                Organize your public repos
-              </Text>
+              <Text sx={homeCarouselTextSx}>Organize your public repos</Text>
             </Carousel.Slide>
             <Carousel.Slide>
-              <Text
-                color="dark.1"
-                sx={{ fontSize: "clamp(3rem, 10vw, 4rem)" }}
-                align="center"
-              >
-                Show off your contributions
-              </Text>
+              <Text sx={homeCarouselTextSx}>Show off your contributions</Text>
             </Carousel.Slide>
             <Carousel.Slide>
-              <Text
-                color="dark.1"
-                sx={{ fontSize: "clamp(3rem, 10vw, 4rem)" }}
-                align="center"
-              >
-                Build your own page in seconds
-              </Text>
+              <Text sx={homeCarouselTextSx}>Build your own page in seconds</Text>
             </Carousel.Slide>
           </Carousel>
           {account && (
             <Button
-              h="60px"
-              w="300px"
-              my="60px"
-              mx="auto"
+              sx={homeViewPageBtnSx}
               component={Link}
               href={`/${account.name}`}
               variant="gradient"
@@ -93,33 +51,11 @@ const Home: NextPage = () => {
               View My Page
             </Button>
           )}
-          {!account && isLoading && (
-            <Skeleton
-              h="60px"
-              w="300px"
-              my="60px"
-              mx="auto"
-              sx={({ colors }: MantineTheme): CSSObject => ({
-                ":before": {
-                  background: colors.dark[5],
-                },
-                ":after": {
-                  background: colors.dark[7],
-                },
-              })}
-            />
-          )}
+          {!account && isLoading && <Skeleton sx={homeSkeletonSx} />}
           {!account && !isLoading && !redirecting && (
             <Button
-              h="60px"
-              // w="300px"
-              my="60px"
-              mx="auto"
               size="lg"
-              sx={{
-                width: "clamp(220px, 10vw, 300px)",
-                fontSize: "clamp(0.5rem, 10vw, 1rem)",
-              }}
+              sx={homeLoginBtnSx}
               leftIcon={<IconBrandGithub />}
               variant="gradient"
               component="a"
@@ -130,44 +66,33 @@ const Home: NextPage = () => {
             </Button>
           )}
           {!account && !isLoading && redirecting && (
-            <Center h="60px" w="300px" my="60px" mx="auto">
+            <Center sx={homeLoaderContainerSx}>
               <Loader />
             </Center>
           )}
         </Stack>
         <Center pos="absolute" bottom={20}>
-          <Flex
-            align={"center"}
-            sx={{ fontSize: "clamp(0.5rem, 10vw, 1.2rem)" }}
-          >
+          <Flex sx={footerFlexSx}>
             <Text color="dark.3">Repobullet.in - by BoilingSoup</Text>
             <Tooltip label="https://github.com/BoilingSoup">
               <ActionIcon
-                color="dark.3"
                 mx="sm"
                 component="a"
                 href="https://github.com/BoilingSoup"
                 target="_blank"
-                sx={{
-                  ":hover": {
-                    background: "none",
-                  },
-                }}
+                aria-label="https://github.com/BoilingSoup"
+                sx={footerIconBtnSx}
               >
                 <IconBrandGithubFilled />
               </ActionIcon>
             </Tooltip>
             <Tooltip label="https://twitter.com/BoilingSoupDev">
               <ActionIcon
-                color="dark.3"
                 component="a"
                 href="https://twitter.com/BoilingSoupDev"
                 target="_blank"
-                sx={{
-                  ":hover": {
-                    background: "none",
-                  },
-                }}
+                aria-label="https://twitter.com/BoilingSoupDev"
+                sx={footerIconBtnSx}
               >
                 <IconBrandTwitterFilled />
               </ActionIcon>

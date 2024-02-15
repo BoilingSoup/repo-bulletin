@@ -270,6 +270,7 @@ const User: NextPage = () => {
                   width={200}
                   mx="auto"
                   radius={9999}
+                  alt="User Github avatar"
                 />
 
                 <Text
