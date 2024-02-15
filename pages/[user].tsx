@@ -41,14 +41,14 @@ import { languageColors, newBulletin, newSection } from "../components/helpers";
 import { PublicContribution, usePublicContributions } from "../hooks/usePublicContributions";
 import { SortableSection } from "../components/SortableSection";
 import { useImmer } from "use-immer";
-import { DndContext, DragOverEvent, DragOverlay } from "@dnd-kit/core";
-import { SortableContext, arraySwap, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { DndContext, DragOverlay } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useQueryClient } from "react-query";
 import { SortableRepo } from "../components/SortableRepo";
 import { RepoForkedIcon } from "@primer/octicons-react";
 import { useSaveMutation } from "../hooks/useSaveMutation";
 import { useViewportSize } from "@mantine/hooks";
-import { getHandleDragStart } from "../components/dragHandlers";
+import { getDragHandlers } from "../components/dragHandlers";
 
 const User: NextPage = () => {
   const { account, isFetched: accountIsFetched } = useAuth();
@@ -112,63 +112,14 @@ const User: NextPage = () => {
   const [dragActiveItem, setDragActiveItem] = useState<Section | PublicContribution | null>(null);
   const queryClient = useQueryClient();
 
-  const handleDragStart = getHandleDragStart({
+  const { handleDragStart, handleDragOver, handleDragEnd } = getDragHandlers({
     setDragActiveItem,
-    bulletinData: bulletinClientData,
+    bulletinClientData,
+    setBulletinClientData,
     enableReposAutoAnimate,
     queryClient,
     user,
   });
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    const activeDraggableType = active.data.current?.type as "SECTION" | "REPO";
-    const overDraggableType = over?.data.current?.type as "SECTION" | "REPO";
-
-    if (over === null || activeDraggableType !== overDraggableType) {
-      return;
-    }
-
-    if (activeDraggableType === "REPO" && active.data.current?.sectionID !== over.data.current?.sectionID) {
-      return;
-    }
-
-    const isSectionOnSection = activeDraggableType === "SECTION";
-    if (isSectionOnSection) {
-      setBulletinClientData((prev) => {
-        if (prev === undefined) {
-          return prev;
-        }
-        const activeSectionIndex = prev.sections.findIndex((section) => section.id === active.id);
-        const overIndex = prev.sections.findIndex((section) => section.id === over.id);
-        prev.sections = arraySwap(prev.sections, activeSectionIndex, overIndex);
-      });
-      return;
-    }
-
-    const isRepoOnRepo = activeDraggableType === "REPO";
-    if (isRepoOnRepo) {
-      setBulletinClientData((prev) => {
-        if (prev === undefined) {
-          return prev;
-        }
-        const dragOverSectionIndex = prev.sections.findIndex(
-          (section) => section.id === active.data.current?.sectionID,
-        );
-        const dragOverSection = prev.sections[dragOverSectionIndex];
-        const activeItemIndex = dragOverSection.repos.findIndex((repo) => repo.id === active.id);
-        const overItemIndex = dragOverSection.repos.findIndex((repo) => repo.id === over.id);
-
-        dragOverSection.repos = arraySwap(dragOverSection.repos, activeItemIndex, overItemIndex);
-      });
-      return;
-    }
-  };
-
-  const handleDragEnd = () => {
-    enableReposAutoAnimate(true);
-    setDragActiveItem(null);
-  };
 
   const containerRef = useRef<HTMLDivElement>(null);
 
