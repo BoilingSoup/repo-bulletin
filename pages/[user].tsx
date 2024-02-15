@@ -41,13 +41,14 @@ import { languageColors, newBulletin, newSection } from "../components/helpers";
 import { PublicContribution, usePublicContributions } from "../hooks/usePublicContributions";
 import { SortableSection } from "../components/SortableSection";
 import { useImmer } from "use-immer";
-import { DndContext, DragOverEvent, DragOverlay, DragStartEvent } from "@dnd-kit/core";
+import { DndContext, DragOverEvent, DragOverlay } from "@dnd-kit/core";
 import { SortableContext, arraySwap, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useQueryClient } from "react-query";
 import { SortableRepo } from "../components/SortableRepo";
 import { RepoForkedIcon } from "@primer/octicons-react";
 import { useSaveMutation } from "../hooks/useSaveMutation";
 import { useViewportSize } from "@mantine/hooks";
+import { getHandleDragStart } from "../components/dragHandlers";
 
 const User: NextPage = () => {
   const { account, isFetched: accountIsFetched } = useAuth();
@@ -111,29 +112,13 @@ const User: NextPage = () => {
   const [dragActiveItem, setDragActiveItem] = useState<Section | PublicContribution | null>(null);
   const queryClient = useQueryClient();
 
-  const handleDragStart = (event: DragStartEvent) => {
-    enableReposAutoAnimate(false);
-    const draggableType = event.active.data.current?.type as "SECTION" | "REPO";
-    if (draggableType === "SECTION") {
-      const sectionIndex = bulletinClientData?.sections.findIndex(
-        (section) => section.id === event.active.id,
-      ) as number;
-      const section = bulletinClientData?.sections[sectionIndex];
-      setDragActiveItem(section as Section);
-      return;
-    }
-
-    if (draggableType === "REPO") {
-      const contributions = queryClient.getQueryData(["contributions", user?.toLowerCase()]) as PublicContribution[];
-
-      const contributionObjIndex = contributions.findIndex(
-        (contribution) => contribution.id === event.active.data.current?.repoID,
-      );
-      const contribution = contributions[contributionObjIndex];
-      setDragActiveItem(contribution);
-      return;
-    }
-  };
+  const handleDragStart = getHandleDragStart({
+    setDragActiveItem,
+    bulletinData: bulletinClientData,
+    enableReposAutoAnimate,
+    queryClient,
+    user,
+  });
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
