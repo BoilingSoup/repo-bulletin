@@ -21,11 +21,7 @@ import { Updater } from "use-immer";
 import { useQueryClient } from "react-query";
 import { SortableRepo } from "./SortableRepo";
 import { useConfirmedDeleteStatus } from "../contexts/HasConfirmedProvider";
-import {
-  SortableContext,
-  rectSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
+import { SortableContext, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { nanoid } from "nanoid";
 
@@ -37,6 +33,7 @@ type Props = {
   animateReposRef: RefCallback<Element>;
 };
 
+// TODO: refactor
 export const SortableSection = ({
   section,
   contributions,
@@ -57,16 +54,12 @@ export const SortableSection = ({
     });
   };
 
-  const handleChangeSectionName: ChangeEventHandler<HTMLInputElement> = (
-    event
-  ) => {
+  const handleChangeSectionName: ChangeEventHandler<HTMLInputElement> = (event) => {
     setBulletinClientData((prev) => {
       if (prev === undefined) {
         return prev;
       }
-      const currSectionIndex = prev.sections.findIndex(
-        (prevStateSection) => prevStateSection.id === section.id
-      );
+      const currSectionIndex = prev.sections.findIndex((prevStateSection) => prevStateSection.id === section.id);
       if (currSectionIndex === -1) {
         return prev;
       }
@@ -86,26 +79,19 @@ export const SortableSection = ({
       if (prev === undefined) {
         return prev;
       }
-      const currSectionIndex = prev.sections.findIndex(
-        (prevStateSection) => prevStateSection.id === section.id
-      );
+      const currSectionIndex = prev.sections.findIndex((prevStateSection) => prevStateSection.id === section.id);
       if (currSectionIndex === -1) {
         return prev;
       }
       const currSection = prev.sections[currSectionIndex];
-      const repoIDIndex = currSection.repos.findIndex(
-        (repo) => repo.repoID === contributionID
-      );
+      const repoIDIndex = currSection.repos.findIndex((repo) => repo.repoID === contributionID);
       currSection.repos.splice(repoIDIndex, 1);
     });
 
-    setCheckedRepos((prev) =>
-      prev.filter((repo) => repo.repoID !== contributionID)
-    );
+    setCheckedRepos((prev) => prev.filter((repo) => repo.repoID !== contributionID));
   };
 
-  const { hasConfirmedDelete, setHasConfirmedDelete } =
-    useConfirmedDeleteStatus();
+  const { hasConfirmedDelete, setHasConfirmedDelete } = useConfirmedDeleteStatus();
 
   const handleRemoveSection = () => {
     if (section.repos.length > 3 && !hasConfirmedDelete) {
@@ -138,21 +124,14 @@ export const SortableSection = ({
     user?.toLowerCase(),
   ]) as PublicContribution[];
 
-  // const [parent, enableAnimations] = useAutoAnimate();
-
-  const [showConfirmDeleteSection, setShowConfirmDeleteSection] =
-    useState(false);
+  const [showConfirmDeleteSection, setShowConfirmDeleteSection] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: section.id, data: { type: "SECTION" } });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: section.id,
+    data: { type: "SECTION" },
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -216,12 +195,7 @@ export const SortableSection = ({
         >
           <Flex direction="column">
             {contributions?.map((contribution) => {
-              if (
-                contribution.name
-                  .trim()
-                  .toLowerCase()
-                  .includes(searchInput.trim().toLowerCase())
-              ) {
+              if (contribution.name.trim().toLowerCase().includes(searchInput.trim().toLowerCase())) {
                 return (
                   <Fragment key={contribution.id}>
                     <Flex
@@ -238,9 +212,7 @@ export const SortableSection = ({
                     >
                       <Checkbox
                         mr="lg"
-                        checked={checkedRepos
-                          .map((el) => el.repoID)
-                          .includes(contribution.id)}
+                        checked={checkedRepos.map((el) => el.repoID).includes(contribution.id)}
                         readOnly
                       />
                       <Text color="dark.1">{contribution.name}</Text>
@@ -265,7 +237,7 @@ export const SortableSection = ({
                   return prev;
                 }
                 const currSectionIndex = prev.sections.findIndex(
-                  (prevStateSection) => prevStateSection.id === section.id
+                  (prevStateSection) => prevStateSection.id === section.id,
                 );
                 if (currSectionIndex === -1) {
                   return prev;
@@ -295,14 +267,8 @@ export const SortableSection = ({
         ref={setNodeRef}
         style={style}
       >
-        <Center
-          {...attributes}
-          {...listeners}
-          h={50}
-          sx={{ cursor: "grab", touchAction: "none" }}
-        >
-          <GrabberIcon fill="white" size={30} />{" "}
-          <Text color="dark.0">Drag & Move</Text>
+        <Center {...attributes} {...listeners} h={50} sx={{ cursor: "grab", touchAction: "none" }}>
+          <GrabberIcon fill="white" size={30} /> <Text color="dark.0">Drag & Move</Text>
         </Center>
         {showConfirmDeleteSection && (
           <Center
@@ -326,11 +292,7 @@ export const SortableSection = ({
               <Button w={100} mr="md" onClick={removeSection} size="xl">
                 Yes
               </Button>
-              <Button
-                w={100}
-                onClick={() => setShowConfirmDeleteSection(false)}
-                size="xl"
-              >
+              <Button w={100} onClick={() => setShowConfirmDeleteSection(false)} size="xl">
                 No
               </Button>
             </Flex>
@@ -421,10 +383,9 @@ export const SortableSection = ({
           <Flex wrap={"wrap"} justify={"space-between"} ref={animateReposRef}>
             {section.repos.map((repo) => {
               const contributionIndex = publicContributionsCachedData.findIndex(
-                (contribution) => contribution.id === repo.repoID
+                (contribution) => contribution.id === repo.repoID,
               );
-              const contribution =
-                publicContributionsCachedData[contributionIndex];
+              const contribution = publicContributionsCachedData[contributionIndex];
               return (
                 <SortableRepo
                   key={repo.id}

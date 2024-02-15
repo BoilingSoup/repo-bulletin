@@ -278,6 +278,47 @@ export const repoStarsTextSx = (): CSSObject => ({
   marginRight: "16px",
 });
 
+export const sortableRepoContainerSx =
+  (mediaQueryWidth: string | undefined) =>
+  (theme: MantineTheme): CSSObject => ({
+    width: "100%",
+    background: theme.colors.github[9],
+    "@media (min-width: 45em)": {
+      width: mediaQueryWidth ?? "49%",
+    },
+    border: "#30363d 1px solid",
+    borderRadius: "6px",
+    padding: theme.spacing.md,
+    marginTop: theme.spacing.md,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+  });
+
+export const sortableRepoNameSx = (): CSSObject => ({ fontSize: "16px", fontWeight: "bold", color: "#2F81F7" });
+
+export const sortableRepoGrabberSx = (): CSSObject => ({ cursor: "grab", touchAction: "none", marginLeft: "auto" });
+
+export const sortableRepoDescriptionSx = (): CSSObject => ({
+  color: "#7d8590",
+  fontSize: "14px",
+  marginBottom: "16px",
+});
+
+export const sortableRepoLangTextSx = (): CSSObject => ({
+  color: "#7d8590",
+  fontSize: "12px",
+  display: "flex",
+  alignItems: "center",
+  marginRight: "16px",
+});
+
+export const removeRepoBtnSx = (theme: MantineTheme): CSSObject => ({
+  color: "#7d8590",
+  marginLeft: "auto",
+  ":hover": { background: theme.colors.github[9] },
+});
+
 export const BREAKPOINT_LG = 585;
 export const BREAKPOINT_MD = 560;
 export const BREAKPOINT_SM = 420;
