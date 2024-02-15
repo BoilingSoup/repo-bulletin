@@ -9,6 +9,7 @@ import { useGithub } from "../hooks/useGithub";
 import { useAuth } from "../contexts/AuthProvider";
 import Link from "next/link";
 import {
+  BREAKPOINT_LG,
   BREAKPOINT_MD,
   BREAKPOINT_SM,
   NAVBAR_HEIGHT,
@@ -19,8 +20,15 @@ import {
   editBtnSx,
   emptyTextSx,
   pageContainerSx,
+  pageEditBtnSx,
+  pageEditTextSx,
   pageLoaderContainerSx,
+  repoCardSx,
+  repoDescriptionSx,
+  repoNameSx,
   saveBtnSx,
+  sectionContainerSx,
+  sectionNameSx,
   userImageSx,
   warningTextSx,
 } from "../components/styles";
@@ -192,6 +200,15 @@ const User: NextPage = () => {
   const userIsEditing = isValidEditMode && githubIsFetched;
   const hasWarning = warningText !== "";
   const saveIsDisabled = hasWarning || isSaving || bulletinClientData?.sections.length === 0;
+  const isDraggingSection = dragActiveItem !== null && typeof dragActiveItem.id === "string";
+  const isDraggingRepo = dragActiveItem !== null && typeof dragActiveItem.id === "number";
+  const isEditable =
+    !isValidEditMode && bulletinIsFetched && bulletinServerData !== null && bulletinServerData !== undefined;
+
+  const isScreenXl = width > BREAKPOINT_LG;
+  const isScreenLg = width > BREAKPOINT_MD;
+  const isScreenMd = width > BREAKPOINT_SM && width <= BREAKPOINT_MD;
+  const isScreenSm = width <= BREAKPOINT_SM;
 
   return (
     <>
@@ -240,7 +257,7 @@ const User: NextPage = () => {
                   <Flex mr="3px" align="center">
                     <IconPlus />
                   </Flex>
-                  {width > 585 && "Add Section"}
+                  {isScreenXl && "Add Section"}
                 </Button>
               </Flex>
               {hasWarning && (
@@ -255,10 +272,9 @@ const User: NextPage = () => {
                   sx={saveBtnSx}
                   onClick={() => saveBulletin(bulletinClientData as Exclude<Bulletin, null>)}
                 >
-                  {width > BREAKPOINT_MD && "Save All"}
-                  {width > BREAKPOINT_SM && width <= BREAKPOINT_MD && <IconDeviceFloppy size={20} />}
-
-                  {width <= BREAKPOINT_SM && <IconDeviceFloppy size={14} />}
+                  {isScreenLg && "Save All"}
+                  {isScreenMd && <IconDeviceFloppy size={20} />}
+                  {isScreenSm && <IconDeviceFloppy size={14} />}
                 </Button>
                 <Button
                   disabled={isSaving}
@@ -268,9 +284,9 @@ const User: NextPage = () => {
                     router.push(`/${user}`);
                   }}
                 >
-                  {width > BREAKPOINT_MD && "Cancel"}
-                  {width > BREAKPOINT_SM && width <= BREAKPOINT_MD && <IconSquareLetterX size={20} />}
-                  {width <= BREAKPOINT_SM && <IconSquareLetterX size={14} />}
+                  {isScreenLg && "Cancel"}
+                  {isScreenMd && <IconSquareLetterX size={20} />}
+                  {isScreenSm && <IconSquareLetterX size={14} />}
                 </Button>
               </Group>
             </Flex>
@@ -295,7 +311,7 @@ const User: NextPage = () => {
                 </Box>
               </SortableContext>
               <DragOverlay>
-                {dragActiveItem !== null && typeof dragActiveItem.id === "string" && (
+                {isDraggingSection && (
                   <SortableSection
                     animateReposRef={reposAnimateRef}
                     section={(() => {
@@ -310,7 +326,7 @@ const User: NextPage = () => {
                     user={user}
                   />
                 )}
-                {dragActiveItem !== null && typeof dragActiveItem.id === "number" && (
+                {isDraggingRepo && (
                   <SortableRepo
                     contribution={dragActiveItem as PublicContribution}
                     onRemove={() => {}}
@@ -324,11 +340,11 @@ const User: NextPage = () => {
             </DndContext>
           </Container>
         )}
-        {!isValidEditMode && bulletinIsFetched && bulletinServerData !== null && bulletinServerData !== undefined && (
+        {isEditable && (
           <Container>
             <Center mt={40}>
               <Image src={githubData?.avatar_url} height={100} width={100} radius={9999} />
-              <Text color="white" ml="xl" size="2rem" pos={"relative"}>
+              <Text sx={pageEditTextSx}>
                 {githubData?.login}
 
                 {isMyPage && (
@@ -339,12 +355,7 @@ const User: NextPage = () => {
                     component={Link}
                     href={`/${user}?edit=true`}
                     compact
-                    pos="absolute"
-                    ml="auto"
-                    mr="auto"
-                    left={0}
-                    right={0}
-                    bottom={-40}
+                    sx={pageEditBtnSx}
                   >
                     Edit
                   </Button>
@@ -360,19 +371,8 @@ const User: NextPage = () => {
 
               return (
                 <Fragment key={section.id}>
-                  <Text
-                    color="white"
-                    sx={{
-                      fontSize: "2rem",
-                      height: "50px",
-                      padding: "1rem",
-                      marginBottom: "1rem",
-                      marginTop: "3rem",
-                    }}
-                  >
-                    {section.name}
-                  </Text>
-                  <Flex wrap={"wrap"} justify={"space-between"}>
+                  <Text sx={sectionNameSx}>{section.name}</Text>
+                  <Flex sx={sectionContainerSx}>
                     {section.repos.map((repo) => {
                       const contributionIndex = publicContributionsCachedData.findIndex(
                         (contribution) => contribution.id === repo.repoID,
@@ -380,39 +380,14 @@ const User: NextPage = () => {
                       const contribution = publicContributionsCachedData[contributionIndex];
 
                       return (
-                        <Paper
-                          sx={(theme) => ({
-                            width: "100%",
-                            background: theme.colors.github[9],
-                            "@media (min-width: 45em)": {
-                              width: "49%",
-                            },
-                            border: "#30363d 1px solid",
-                            borderRadius: "6px",
-                            padding: theme.spacing.md,
-                            marginTop: theme.spacing.md,
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "space-between",
-                          })}
-                          key={repo.id}
-                        >
+                        <Paper sx={repoCardSx} key={repo.id}>
                           <Flex direction={"column"}>
                             <Flex align={"center"}>
-                              <Text
-                                color="#2F81F7"
-                                size="16px"
-                                weight={"bold"}
-                                component="a"
-                                target="_blank"
-                                href={contribution.html_url}
-                              >
+                              <Text component="a" target="_blank" href={contribution.html_url} sx={repoNameSx}>
                                 {contribution.name}
                               </Text>
                             </Flex>
-                            <Text color="#7d8590" size="14px" sx={{ marginBottom: "16px" }}>
-                              {contribution.description}
-                            </Text>
+                            <Text sx={repoDescriptionSx}>{contribution.description}</Text>
                           </Flex>
 
                           <Flex>

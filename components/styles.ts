@@ -190,5 +190,63 @@ export const cancelBtnSx = (theme: MantineTheme): CSSObject => ({
   },
 });
 
+export const pageEditBtnSx = (): CSSObject => ({
+  position: "absolute",
+  marginLeft: "auto",
+  marginRight: "auto",
+  left: 0,
+  right: 0,
+  bottom: -40,
+});
+
+export const pageEditTextSx = (theme: MantineTheme): CSSObject => ({
+  color: "white",
+  marginLeft: theme.spacing.xl,
+  fontSize: "2rem",
+  position: "relative",
+});
+
+export const sectionNameSx = (): CSSObject => ({
+  color: "white",
+  fontSize: "2rem",
+  height: "50px",
+  padding: "1rem",
+  marginBottom: "1rem",
+  marginTop: "3rem",
+});
+
+export const sectionContainerSx = (): CSSObject => ({
+  flexWrap: "wrap",
+  justifyContent: "space-between",
+});
+
+export const repoCardSx = (theme: MantineTheme): CSSObject => ({
+  width: "100%",
+  background: theme.colors.github[9],
+  "@media (min-width: 45em)": {
+    width: "49%",
+  },
+  border: "#30363d 1px solid",
+  borderRadius: "6px",
+  padding: theme.spacing.md,
+  marginTop: theme.spacing.md,
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "space-between",
+});
+
+export const repoNameSx = (): CSSObject => ({
+  color: "#2F81F7",
+  fontSize: "16px",
+  fontWeight: "bold",
+});
+
+export const repoDescriptionSx = (): CSSObject => ({
+  color: "#7d8590",
+  fontSize: "14px",
+  marginBottom: "16px",
+});
+
+export const BREAKPOINT_LG = 585;
 export const BREAKPOINT_MD = 560;
 export const BREAKPOINT_SM = 420;
