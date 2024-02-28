@@ -6,7 +6,9 @@ Doing so will create a page that matches your GitHub username. Ex: https://repob
 # How is it Different From GitHub's Pinned Repos?
 You may know that GitHub allows users to pin repositories to their profile page. However, the feature is quite limited.
 
-Repo Bulletin extends this functionality by allowing users to group their repositories into sections, and allows users to pin more than 6 repositories.
+Repo Bulletin extends this functionality by allowing users to:
+- group their repositories into sections.
+- pin more than 6 repositories.
 
 # Video Demo
 
