@@ -3,7 +3,7 @@ Repo Bulletin is a bulletin board/page builder to pin your public GitHub repos. 
 
 Doing so will create a page that matches your GitHub username. Ex: https://repobullet.in/boilingsoup
 
-# How is it Different From GitHub's Pinned Repos?
+# How Is it Different From GitHub's Pinned Repos?
 You may know that GitHub allows users to pin repositories to their profile page. However, the feature is quite limited.
 
 Repo Bulletin extends this functionality by allowing users to:
